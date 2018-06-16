@@ -137,7 +137,8 @@ am__v_AR_1 =
 libdriver_a_AR = $(AR) $(ARFLAGS)
 libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libdriver_a_OBJECTS = baro/bmp280.$(OBJEXT)
+am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
+	baro/bmp280.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -333,6 +334,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libdriver.a
 libdriver_a_SOURCES = \
+    accgyro/mpu6500.c\
     baro/bmp280.c
 
 libdriver_a_LIBADD = 
@@ -435,6 +437,14 @@ uninstall-libLIBRARIES:
 
 clean-libLIBRARIES:
 	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
+accgyro/$(am__dirstamp):
+	@$(MKDIR_P) accgyro
+	@: > accgyro/$(am__dirstamp)
+accgyro/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) accgyro/$(DEPDIR)
+	@: > accgyro/$(DEPDIR)/$(am__dirstamp)
+accgyro/mpu6500.$(OBJEXT): accgyro/$(am__dirstamp) \
+	accgyro/$(DEPDIR)/$(am__dirstamp)
 baro/$(am__dirstamp):
 	@$(MKDIR_P) baro
 	@: > baro/$(am__dirstamp)
@@ -451,11 +461,13 @@ libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdrive
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
+	-rm -f accgyro/*.$(OBJEXT)
 	-rm -f baro/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
 
 .c.o:
@@ -603,6 +615,8 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
+	-rm -f accgyro/$(DEPDIR)/$(am__dirstamp)
+	-rm -f accgyro/$(am__dirstamp)
 	-rm -f baro/$(DEPDIR)/$(am__dirstamp)
 	-rm -f baro/$(am__dirstamp)
 
@@ -615,7 +629,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf baro/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -661,7 +675,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf baro/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

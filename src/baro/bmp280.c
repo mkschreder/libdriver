@@ -71,18 +71,6 @@ struct bmp280 {
 	struct baro_device dev;
 };
 
-int fdt_find_node_by_ref(void *fdt, int fdt_node, const char *prop_ref){
-	/* Find the node referenced by pins label and then parse out the pins of that node for gpio references */
-	int len = 0;
-	const fdt32_t *val = (const fdt32_t*)fdt_getprop(fdt, fdt_node, prop_ref, &len);
-	if(len != 4) return -1;
-
-	uint32_t pins_handle = (uint32_t)fdt32_to_cpu(*val);
-
-	int node = fdt_node_offset_by_phandle(fdt, pins_handle);
-	if(node < 0) return -1;
-	return node;
-}
 /*
 static int _bmp280_read_pressure(baro_device_t dev, float *pressure){
     // start measurement
