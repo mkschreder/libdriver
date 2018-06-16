@@ -24,7 +24,7 @@
 #pragma once 
 
 struct mpu6000{
-	serial_dev_t port;
+	serial_port_t port;
 	pio_dev_t 	gpio; 
 	gpio_pin_t 	cs_pin; 
 }; 

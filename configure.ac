@@ -23,5 +23,5 @@ AC_MSG_NOTICE([pkgconfig directory is ${pkgconfigdir}])
 
 AC_CONFIG_FILES([libdriver.pc])
 
-AC_OUTPUT(Makefile src/Makefile src/accgyro/Makefile test/Makefile)
+AC_OUTPUT(Makefile src/Makefile)
 

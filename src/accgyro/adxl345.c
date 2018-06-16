@@ -24,11 +24,15 @@
 
 #include <stdlib.h>
 
+#include <libfirmware/driver.h>
+#include <libfirmware/i2c.h>
 
-#include "adxl345.h"
+#define ADXL345_ADDR (0x53<<1) //device address
 
-
-//note: we use only 10 bit resolution
+struct adxl345 {
+	i2c_device_t i2c;
+	uint8_t addr; 
+};
 
 //definitions
 #define ADXL345_RANGE2G 0x00 //sensitivity to 2g and measurement mode
@@ -98,21 +102,20 @@ static uint8_t firstread = 1;
 /*
  * initialize the accellerometer
  */
-void adxl345_init(struct adxl345 *self, i2c_dev_t i2c, uint8_t addr) {
+void adxl345_init(struct adxl345 *self, i2c_device_t i2c, uint8_t addr) {
 	self->i2c = i2c;
 	self->addr = (addr)?addr:ADXL345_ADDR; 
-	uint8_t data[2];
-	data[0] = 0x31; data[1] = ADXL345_RANGE | (ADXL345_FULLRANGE<<3);
-	i2c_start_write(i2c, self->addr, data, 2);
-	data[0] = 0x2D; data[1] = 0x00; // disable
-	i2c_start_write(i2c, self->addr, data, 2);
-	data[0] = 0x2D; data[1] = 0x16; // standby
-	i2c_start_write(i2c, self->addr, data, 2);
-	data[0] = 0x2D; data[1] = 0x08; // enable
-	i2c_start_write(i2c, self->addr, data, 2);
-	data[0] = 0x2E; data[1] = 0x80; // data_ready on int2
-	i2c_start_write(i2c, self->addr, data, 2);
-	i2c_stop(i2c); 
+	uint8_t data = 0;
+    data = ADXL345_RANGE | (ADXL345_FULLRANGE<<3);
+	i2c_write_reg(i2c, self->addr, 0x31, &data, 1);
+	data = 0x00; // disable
+	i2c_write_reg(i2c, self->addr, 0x2D, &data, 1);
+	data = 0x16; // standby
+	i2c_write_reg(i2c, self->addr, 0x2D, &data, 1);
+	data = 0x08; // enable
+	i2c_write_reg(i2c, self->addr, 0x2D, &data, 1);
+	data = 0x80; // data_ready on int2
+	i2c_write_reg(i2c, self->addr, 0x2E, &data, 1);
 }
 
 /*
@@ -121,19 +124,17 @@ void adxl345_init(struct adxl345 *self, i2c_dev_t i2c, uint8_t addr) {
 /*static void adxl345_write_offset(struct adxl345 *self, int8_t offsetx, int8_t offsety, int8_t offsetz) {
 	uint8_t data[2];
 	data[0] = 0x1E; data[1] = offsetx; 
-	i2c_start_write(self->i2c, self->addr, data, 2);
+	i2c_write_reg(self->i2c, self->addr, data, 2);
 	data[0] = 0x1F; data[1] = offsety; 
-	i2c_start_write(self->i2c, self->addr, data, 2);
+	i2c_write_reg(self->i2c, self->addr, data, 2);
 	data[0] = 0x20; data[1] = offsetz;
-	i2c_start_write(self->i2c, self->addr, data, 2);
+	i2c_write_reg(self->i2c, self->addr, data, 2);
 	i2c_stop(self->i2c); 
 }*/
 
 static uint8_t _adxl345_read_register(struct adxl345 *self, uint8_t reg) {
 	uint8_t value; 
-	i2c_start_write(self->i2c, self->addr, &reg, 1);
-	i2c_start_read(self->i2c, self->addr, &value, 1);
-	i2c_stop(self->i2c);
+	i2c_read_reg(self->i2c, self->addr, reg, &value, 1);
 	return value;
 }
 
@@ -142,21 +143,18 @@ static int8_t adxl345_wait_for_data_ready(struct adxl345 *self) {
 	while(!(_adxl345_read_register(self, 0x30) & 0x80)){
 		// TODO: add timeout or yield
 	}
-	return 0; 
+	return 0;
 }
 
 int8_t adxl345_read_raw(struct adxl345 *self, int16_t *axraw, int16_t *ayraw, int16_t *azraw){
 	if(adxl345_wait_for_data_ready(self) == -1) return -1;
 
 	//read axis data
-	*axraw = _adxl345_read_register(self, 0x32);
-	*axraw += _adxl345_read_register(self, 0x33) << 8;
-	*ayraw = _adxl345_read_register(self, 0x34);
-	*ayraw += _adxl345_read_register(self, 0x35) << 8;
-	*azraw = _adxl345_read_register(self, 0x36);
-	*azraw += _adxl345_read_register(self, 0x37) << 8;
+	*axraw = (int16_t)(_adxl345_read_register(self, 0x32) + (_adxl345_read_register(self, 0x33) << 8));
+	*ayraw = (int16_t)(_adxl345_read_register(self, 0x34) + (_adxl345_read_register(self, 0x35) << 8));
+	*azraw = (int16_t)(_adxl345_read_register(self, 0x36) + (_adxl345_read_register(self, 0x37) << 8));
 
-	return 0; 
+	return 0;
 }
 
 int8_t adxl345_read_adjusted(struct adxl345 *self, float *ax, float *ay, float *az) {

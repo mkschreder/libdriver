@@ -24,8 +24,7 @@
 
 #include <stdlib.h>
 
-#include <arch/soc.h>
-
+#include <libfirmware/thread.h>
 #include "mma7455.h"
 
 #define MMA7455_MODE8BIT 8 //sensitivity to 8bit
@@ -80,14 +79,13 @@ static float azold = 0;
 static uint8_t firstread = 1;
 #endif
 
-void mma7455_init(struct mma7455 *self, i2c_dev_t i2c, uint8_t addr, uint8_t mode) {
+void mma7455_init(struct mma7455 *self, i2c_device_t i2c, uint8_t addr, uint8_t mode) {
 	self->i2c = i2c;
 	self->addr = addr;
 	self->mode = mode;
 	
-	uint8_t data[2] = {0x16, MMA7455_RANGE};
-	i2c_start_write(i2c, addr, data, 2);
-	i2c_stop(i2c);
+    uint8_t data = MMA7455_RANGE;
+    i2c_write_reg(i2c, addr, 0x16, &data, 1);
 }
 
 #if MMA7455_GETATTITUDE == 1
@@ -106,9 +104,7 @@ void mma7455_getpitchroll(struct mma7455 *self, float ax, float ay, float az, fl
 
 static uint8_t mma7455_read_reg(struct mma7455 *self, uint8_t reg){
 	uint8_t data; 
-	i2c_start_write(self->i2c, self->addr, &reg, 1);
-	i2c_start_read(self->i2c, self->addr, &data, 1);
-	i2c_stop(self->i2c);
+    i2c_read_reg(self->i2c, self->addr, reg, &data, 1);
 	return data; 
 }
 
@@ -121,7 +117,7 @@ static int8_t mma7455_waitfordataready(struct mma7455 *self) {
 	while(!(mma7455_read_reg(self, 0x09) & 0x01)){
 		timeout--;
 		if(timeout == 0) return -1; 
-		delay_us(100);
+		thread_sleep_ms(1);
 	}
 	return 0; 
 }
@@ -144,19 +140,19 @@ void mma7455_getdata(struct mma7455 *self, float *ax, float *ay, float *az) {
 	//wait for data
 	mma7455_waitfordataready(self);
 	switch(self->mode) {
+	#if MMA7455_MODE == MMA7455_MODE8BIT
 		case MMA7455_MODE8BIT:
-			axraw = mma7455_read_reg(self, 0x06);
-			ayraw = mma7455_read_reg(self, 0x07);
-			azraw = mma7455_read_reg(self, 0x08);
+			axraw = (int8_t)mma7455_read_reg(self, 0x06);
+			ayraw = (int8_t)mma7455_read_reg(self, 0x07);
+			azraw = (int8_t)mma7455_read_reg(self, 0x08);
 			break;
+	#elif MMA7455_MODE == MMA7455_MODE10BIT
 		case MMA7455_MODE10BIT:
-			axraw = mma7455_read_reg(self, 0x00);
-			axraw += (mma7455_read_reg(self, 0x01) << 8);
-			ayraw = mma7455_read_reg(self, 0x02);
-			ayraw += (mma7455_read_reg(self, 0x03) << 8);
-			azraw = mma7455_read_reg(self, 0x04);
-			azraw += (mma7455_read_reg(self, 0x05) << 8);
+			axraw = (int16_t)(mma7455_read_reg(self, 0x00) + (mma7455_read_reg(self, 0x01) << 8));
+			ayraw = (int16_t)(mma7455_read_reg(self, 0x02) + (mma7455_read_reg(self, 0x03) << 8));
+			azraw = (int16_t)(mma7455_read_reg(self, 0x04) + (mma7455_read_reg(self, 0x05) << 8));
 			break;
+    #endif
 	}
 	
 	//transform raw data to g data

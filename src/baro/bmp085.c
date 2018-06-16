@@ -25,8 +25,6 @@
 #include <string.h>
 #include <math.h>
 
-#include <arch/soc.h>
-
 #include "bmp085.h"
 
 //registers

@@ -26,7 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <arch/soc.h>
+
 #include "mpu6000.h"
 
 #define MPU6000_AXOFFSET 0
