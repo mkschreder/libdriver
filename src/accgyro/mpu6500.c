@@ -168,8 +168,8 @@ struct mpu6500 {
 };
 
 int _spi_read_reg(spi_device_t spi, uint8_t reg, uint8_t *data){
-    char tx[2] = {reg | 0x80, 0};
-    char rx[2] = {0, 0};
+    uint8_t tx[2] = {reg | 0x80, 0};
+    uint8_t rx[2] = {0, 0};
     // try to read out the id of the chip
     if(spi_transfer(spi, 0, tx, rx, 1, MPU6500_REQUEST_TIMEOUT) < 0) {
         return -EIO;

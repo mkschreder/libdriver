@@ -1,7 +1,9 @@
 lib_LIBRARIES=libdriver.a
 libdriver_a_SOURCES=\
     accgyro/mpu6500.c\
-    baro/bmp280.c
+    baro/bmp280.c\
+    disp/ili9340.c\
+    disp/ledpanel.c
 libdriver_a_LIBADD=
 
 other_sources =\

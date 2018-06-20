@@ -1,23 +1,23 @@
 /*
-	This file is part of martink project.
+    This file is part of martink project.
 
-	martink firmware project is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    martink firmware project is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	martink firmware is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    martink firmware is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with martink firmware.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with martink firmware.  If not, see <http://www.gnu.org/licenses/>.
 
-	Author: Martin K. Schröder
-	Email: info@fortmax.se
-	Github: https://github.com/mkschreder
-*/
+    Author: Martin K. Schröder
+    Email: info@fortmax.se
+    Github: https://github.com/mkschreder
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,744 +26,379 @@
 #include <ctype.h>
 #include <limits.h>
 #include <math.h>
+#include <errno.h>
 
-#include <arch/soc.h>
+#include <libfirmware/driver.h>
+#include <libfirmware/display.h>
+#include <libfirmware/spi.h>
+#include <libfirmware/gpio.h>
 
-#include "ili9340.h"
+#include <libfdt/libfdt.h>
 
-#define CS_HI 		gpio_set(self->cs_pin)
-#define CS_LO 		gpio_clear(self->cs_pin)
-#define RST_HI 		gpio_set(self->rst_pin)
-#define RST_LO 		gpio_clear(self->rst_pin)
-#define DC_HI 		gpio_set(self->dc_pin)
-#define DC_LO 		gpio_clear(self->dc_pin)
-
-static const unsigned char font[] PROGMEM = {
-0x00, 0x00, 0x00, 0x00, 0x00,
-0x3E, 0x5B, 0x4F, 0x5B, 0x3E,
-0x3E, 0x6B, 0x4F, 0x6B, 0x3E,
-0x1C, 0x3E, 0x7C, 0x3E, 0x1C,
-0x18, 0x3C, 0x7E, 0x3C, 0x18,
-0x1C, 0x57, 0x7D, 0x57, 0x1C,
-0x1C, 0x5E, 0x7F, 0x5E, 0x1C,
-0x00, 0x18, 0x3C, 0x18, 0x00,
-0xFF, 0xE7, 0xC3, 0xE7, 0xFF,
-0x00, 0x18, 0x24, 0x18, 0x00,
-0xFF, 0xE7, 0xDB, 0xE7, 0xFF,
-0x30, 0x48, 0x3A, 0x06, 0x0E,
-0x26, 0x29, 0x79, 0x29, 0x26,
-0x40, 0x7F, 0x05, 0x05, 0x07,
-0x40, 0x7F, 0x05, 0x25, 0x3F,
-0x5A, 0x3C, 0xE7, 0x3C, 0x5A,
-0x7F, 0x3E, 0x1C, 0x1C, 0x08,
-0x08, 0x1C, 0x1C, 0x3E, 0x7F,
-0x14, 0x22, 0x7F, 0x22, 0x14,
-0x5F, 0x5F, 0x00, 0x5F, 0x5F,
-0x06, 0x09, 0x7F, 0x01, 0x7F,
-0x00, 0x66, 0x89, 0x95, 0x6A,
-0x60, 0x60, 0x60, 0x60, 0x60,
-0x94, 0xA2, 0xFF, 0xA2, 0x94,
-0x08, 0x04, 0x7E, 0x04, 0x08,
-0x10, 0x20, 0x7E, 0x20, 0x10,
-0x08, 0x08, 0x2A, 0x1C, 0x08,
-0x08, 0x1C, 0x2A, 0x08, 0x08,
-0x1E, 0x10, 0x10, 0x10, 0x10,
-0x0C, 0x1E, 0x0C, 0x1E, 0x0C,
-0x30, 0x38, 0x3E, 0x38, 0x30,
-0x06, 0x0E, 0x3E, 0x0E, 0x06,
-0x00, 0x00, 0x00, 0x00, 0x00,
-0x00, 0x00, 0x5F, 0x00, 0x00,
-0x00, 0x07, 0x00, 0x07, 0x00,
-0x14, 0x7F, 0x14, 0x7F, 0x14,
-0x24, 0x2A, 0x7F, 0x2A, 0x12,
-0x23, 0x13, 0x08, 0x64, 0x62,
-0x36, 0x49, 0x56, 0x20, 0x50,
-0x00, 0x08, 0x07, 0x03, 0x00,
-0x00, 0x1C, 0x22, 0x41, 0x00,
-0x00, 0x41, 0x22, 0x1C, 0x00,
-0x2A, 0x1C, 0x7F, 0x1C, 0x2A,
-0x08, 0x08, 0x3E, 0x08, 0x08,
-0x00, 0x80, 0x70, 0x30, 0x00,
-0x08, 0x08, 0x08, 0x08, 0x08,
-0x00, 0x00, 0x60, 0x60, 0x00,
-0x20, 0x10, 0x08, 0x04, 0x02,
-0x3E, 0x51, 0x49, 0x45, 0x3E,
-0x00, 0x42, 0x7F, 0x40, 0x00,
-0x72, 0x49, 0x49, 0x49, 0x46,
-0x21, 0x41, 0x49, 0x4D, 0x33,
-0x18, 0x14, 0x12, 0x7F, 0x10,
-0x27, 0x45, 0x45, 0x45, 0x39,
-0x3C, 0x4A, 0x49, 0x49, 0x31,
-0x41, 0x21, 0x11, 0x09, 0x07,
-0x36, 0x49, 0x49, 0x49, 0x36,
-0x46, 0x49, 0x49, 0x29, 0x1E,
-0x00, 0x00, 0x14, 0x00, 0x00,
-0x00, 0x40, 0x34, 0x00, 0x00,
-0x00, 0x08, 0x14, 0x22, 0x41,
-0x14, 0x14, 0x14, 0x14, 0x14,
-0x00, 0x41, 0x22, 0x14, 0x08,
-0x02, 0x01, 0x59, 0x09, 0x06,
-0x3E, 0x41, 0x5D, 0x59, 0x4E,
-0x7C, 0x12, 0x11, 0x12, 0x7C,
-0x7F, 0x49, 0x49, 0x49, 0x36,
-0x3E, 0x41, 0x41, 0x41, 0x22,
-0x7F, 0x41, 0x41, 0x41, 0x3E,
-0x7F, 0x49, 0x49, 0x49, 0x41,
-0x7F, 0x09, 0x09, 0x09, 0x01,
-0x3E, 0x41, 0x41, 0x51, 0x73,
-0x7F, 0x08, 0x08, 0x08, 0x7F,
-0x00, 0x41, 0x7F, 0x41, 0x00,
-0x20, 0x40, 0x41, 0x3F, 0x01,
-0x7F, 0x08, 0x14, 0x22, 0x41,
-0x7F, 0x40, 0x40, 0x40, 0x40,
-0x7F, 0x02, 0x1C, 0x02, 0x7F,
-0x7F, 0x04, 0x08, 0x10, 0x7F,
-0x3E, 0x41, 0x41, 0x41, 0x3E,
-0x7F, 0x09, 0x09, 0x09, 0x06,
-0x3E, 0x41, 0x51, 0x21, 0x5E,
-0x7F, 0x09, 0x19, 0x29, 0x46,
-0x26, 0x49, 0x49, 0x49, 0x32,
-0x03, 0x01, 0x7F, 0x01, 0x03,
-0x3F, 0x40, 0x40, 0x40, 0x3F,
-0x1F, 0x20, 0x40, 0x20, 0x1F,
-0x3F, 0x40, 0x38, 0x40, 0x3F,
-0x63, 0x14, 0x08, 0x14, 0x63,
-0x03, 0x04, 0x78, 0x04, 0x03,
-0x61, 0x59, 0x49, 0x4D, 0x43,
-0x00, 0x7F, 0x41, 0x41, 0x41,
-0x02, 0x04, 0x08, 0x10, 0x20,
-0x00, 0x41, 0x41, 0x41, 0x7F,
-0x04, 0x02, 0x01, 0x02, 0x04,
-0x40, 0x40, 0x40, 0x40, 0x40,
-0x00, 0x03, 0x07, 0x08, 0x00,
-0x20, 0x54, 0x54, 0x78, 0x40,
-0x7F, 0x28, 0x44, 0x44, 0x38,
-0x38, 0x44, 0x44, 0x44, 0x28,
-0x38, 0x44, 0x44, 0x28, 0x7F,
-0x38, 0x54, 0x54, 0x54, 0x18,
-0x00, 0x08, 0x7E, 0x09, 0x02,
-0x18, 0xA4, 0xA4, 0x9C, 0x78,
-0x7F, 0x08, 0x04, 0x04, 0x78,
-0x00, 0x44, 0x7D, 0x40, 0x00,
-0x20, 0x40, 0x40, 0x3D, 0x00,
-0x7F, 0x10, 0x28, 0x44, 0x00,
-0x00, 0x41, 0x7F, 0x40, 0x00,
-0x7C, 0x04, 0x78, 0x04, 0x78,
-0x7C, 0x08, 0x04, 0x04, 0x78,
-0x38, 0x44, 0x44, 0x44, 0x38,
-0xFC, 0x18, 0x24, 0x24, 0x18,
-0x18, 0x24, 0x24, 0x18, 0xFC,
-0x7C, 0x08, 0x04, 0x04, 0x08,
-0x48, 0x54, 0x54, 0x54, 0x24,
-0x04, 0x04, 0x3F, 0x44, 0x24,
-0x3C, 0x40, 0x40, 0x20, 0x7C,
-0x1C, 0x20, 0x40, 0x20, 0x1C,
-0x3C, 0x40, 0x30, 0x40, 0x3C,
-0x44, 0x28, 0x10, 0x28, 0x44,
-0x4C, 0x90, 0x90, 0x90, 0x7C,
-0x44, 0x64, 0x54, 0x4C, 0x44,
-0x00, 0x08, 0x36, 0x41, 0x00,
-0x00, 0x00, 0x77, 0x00, 0x00,
-0x00, 0x41, 0x36, 0x08, 0x00,
-0x02, 0x01, 0x02, 0x04, 0x02,
-0x3C, 0x26, 0x23, 0x26, 0x3C,
-0x1E, 0xA1, 0xA1, 0x61, 0x12,
-0x3A, 0x40, 0x40, 0x20, 0x7A,
-0x38, 0x54, 0x54, 0x55, 0x59,
-0x21, 0x55, 0x55, 0x79, 0x41,
-0x22, 0x54, 0x54, 0x78, 0x42, // a-umlaut
-0x21, 0x55, 0x54, 0x78, 0x40,
-0x20, 0x54, 0x55, 0x79, 0x40,
-0x0C, 0x1E, 0x52, 0x72, 0x12,
-0x39, 0x55, 0x55, 0x55, 0x59,
-0x39, 0x54, 0x54, 0x54, 0x59,
-0x39, 0x55, 0x54, 0x54, 0x58,
-0x00, 0x00, 0x45, 0x7C, 0x41,
-0x00, 0x02, 0x45, 0x7D, 0x42,
-0x00, 0x01, 0x45, 0x7C, 0x40,
-0x7D, 0x12, 0x11, 0x12, 0x7D, // A-umlaut
-0xF0, 0x28, 0x25, 0x28, 0xF0,
-0x7C, 0x54, 0x55, 0x45, 0x00,
-0x20, 0x54, 0x54, 0x7C, 0x54,
-0x7C, 0x0A, 0x09, 0x7F, 0x49,
-0x32, 0x49, 0x49, 0x49, 0x32,
-0x3A, 0x44, 0x44, 0x44, 0x3A, // o-umlaut
-0x32, 0x4A, 0x48, 0x48, 0x30,
-0x3A, 0x41, 0x41, 0x21, 0x7A,
-0x3A, 0x42, 0x40, 0x20, 0x78,
-0x00, 0x9D, 0xA0, 0xA0, 0x7D,
-0x3D, 0x42, 0x42, 0x42, 0x3D, // O-umlaut
-0x3D, 0x40, 0x40, 0x40, 0x3D,
-0x3C, 0x24, 0xFF, 0x24, 0x24,
-0x48, 0x7E, 0x49, 0x43, 0x66,
-0x2B, 0x2F, 0xFC, 0x2F, 0x2B,
-0xFF, 0x09, 0x29, 0xF6, 0x20,
-0xC0, 0x88, 0x7E, 0x09, 0x03,
-0x20, 0x54, 0x54, 0x79, 0x41,
-0x00, 0x00, 0x44, 0x7D, 0x41,
-0x30, 0x48, 0x48, 0x4A, 0x32,
-0x38, 0x40, 0x40, 0x22, 0x7A,
-0x00, 0x7A, 0x0A, 0x0A, 0x72,
-0x7D, 0x0D, 0x19, 0x31, 0x7D,
-0x26, 0x29, 0x29, 0x2F, 0x28,
-0x26, 0x29, 0x29, 0x29, 0x26,
-0x30, 0x48, 0x4D, 0x40, 0x20,
-0x38, 0x08, 0x08, 0x08, 0x08,
-0x08, 0x08, 0x08, 0x08, 0x38,
-0x2F, 0x10, 0xC8, 0xAC, 0xBA,
-0x2F, 0x10, 0x28, 0x34, 0xFA,
-0x00, 0x00, 0x7B, 0x00, 0x00,
-0x08, 0x14, 0x2A, 0x14, 0x22,
-0x22, 0x14, 0x2A, 0x14, 0x08,
-0xAA, 0x00, 0x55, 0x00, 0xAA,
-0xAA, 0x55, 0xAA, 0x55, 0xAA,
-0x00, 0x00, 0x00, 0xFF, 0x00,
-0x10, 0x10, 0x10, 0xFF, 0x00,
-0x14, 0x14, 0x14, 0xFF, 0x00,
-0x10, 0x10, 0xFF, 0x00, 0xFF,
-0x10, 0x10, 0xF0, 0x10, 0xF0,
-0x14, 0x14, 0x14, 0xFC, 0x00,
-0x14, 0x14, 0xF7, 0x00, 0xFF,
-0x00, 0x00, 0xFF, 0x00, 0xFF,
-0x14, 0x14, 0xF4, 0x04, 0xFC,
-0x14, 0x14, 0x17, 0x10, 0x1F,
-0x10, 0x10, 0x1F, 0x10, 0x1F,
-0x14, 0x14, 0x14, 0x1F, 0x00,
-0x10, 0x10, 0x10, 0xF0, 0x00,
-0x00, 0x00, 0x00, 0x1F, 0x10,
-0x10, 0x10, 0x10, 0x1F, 0x10,
-0x10, 0x10, 0x10, 0xF0, 0x10,
-0x00, 0x00, 0x00, 0xFF, 0x10,
-0x10, 0x10, 0x10, 0x10, 0x10,
-0x10, 0x10, 0x10, 0xFF, 0x10,
-0x00, 0x00, 0x00, 0xFF, 0x14,
-0x00, 0x00, 0xFF, 0x00, 0xFF,
-0x00, 0x00, 0x1F, 0x10, 0x17,
-0x00, 0x00, 0xFC, 0x04, 0xF4,
-0x14, 0x14, 0x17, 0x10, 0x17,
-0x14, 0x14, 0xF4, 0x04, 0xF4,
-0x00, 0x00, 0xFF, 0x00, 0xF7,
-0x14, 0x14, 0x14, 0x14, 0x14,
-0x14, 0x14, 0xF7, 0x00, 0xF7,
-0x14, 0x14, 0x14, 0x17, 0x14,
-0x10, 0x10, 0x1F, 0x10, 0x1F,
-0x14, 0x14, 0x14, 0xF4, 0x14,
-0x10, 0x10, 0xF0, 0x10, 0xF0,
-0x00, 0x00, 0x1F, 0x10, 0x1F,
-0x00, 0x00, 0x00, 0x1F, 0x14,
-0x00, 0x00, 0x00, 0xFC, 0x14,
-0x00, 0x00, 0xF0, 0x10, 0xF0,
-0x10, 0x10, 0xFF, 0x10, 0xFF,
-0x14, 0x14, 0x14, 0xFF, 0x14,
-0x10, 0x10, 0x10, 0x1F, 0x00,
-0x00, 0x00, 0x00, 0xF0, 0x10,
-0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-0xF0, 0xF0, 0xF0, 0xF0, 0xF0,
-0xFF, 0xFF, 0xFF, 0x00, 0x00,
-0x00, 0x00, 0x00, 0xFF, 0xFF,
-0x0F, 0x0F, 0x0F, 0x0F, 0x0F,
-0x38, 0x44, 0x44, 0x38, 0x44,
-0xFC, 0x4A, 0x4A, 0x4A, 0x34, // sharp-s or beta
-0x7E, 0x02, 0x02, 0x06, 0x06,
-0x02, 0x7E, 0x02, 0x7E, 0x02,
-0x63, 0x55, 0x49, 0x41, 0x63,
-0x38, 0x44, 0x44, 0x3C, 0x04,
-0x40, 0x7E, 0x20, 0x1E, 0x20,
-0x06, 0x02, 0x7E, 0x02, 0x02,
-0x99, 0xA5, 0xE7, 0xA5, 0x99,
-0x1C, 0x2A, 0x49, 0x2A, 0x1C,
-0x4C, 0x72, 0x01, 0x72, 0x4C,
-0x30, 0x4A, 0x4D, 0x4D, 0x30,
-0x30, 0x48, 0x78, 0x48, 0x30,
-0xBC, 0x62, 0x5A, 0x46, 0x3D,
-0x3E, 0x49, 0x49, 0x49, 0x00,
-0x7E, 0x01, 0x01, 0x01, 0x7E,
-0x2A, 0x2A, 0x2A, 0x2A, 0x2A,
-0x44, 0x44, 0x5F, 0x44, 0x44,
-0x40, 0x51, 0x4A, 0x44, 0x40,
-0x40, 0x44, 0x4A, 0x51, 0x40,
-0x00, 0x00, 0xFF, 0x01, 0x03,
-0xE0, 0x80, 0xFF, 0x00, 0x00,
-0x08, 0x08, 0x6B, 0x6B, 0x08,
-0x36, 0x12, 0x36, 0x24, 0x36,
-0x06, 0x0F, 0x09, 0x0F, 0x06,
-0x00, 0x00, 0x18, 0x18, 0x00,
-0x00, 0x00, 0x10, 0x10, 0x00,
-0x30, 0x40, 0xFF, 0x01, 0x01,
-0x00, 0x1F, 0x01, 0x01, 0x1E,
-0x00, 0x19, 0x1D, 0x17, 0x12,
-0x00, 0x3C, 0x3C, 0x3C, 0x3C,
-0x00, 0x00, 0x00, 0x00, 0x00
+enum {
+    CS_PIN,
+    RST_PIN,
+    DC_PIN
 };
 
-#define spi_writereadbyte(ch) (serial_putc(self->sdev, (ch)), serial_getc(self->sdev))
+#define CS_HI       gpio_set(self->gpio, CS_PIN)
+#define CS_LO       gpio_reset(self->gpio, CS_PIN)
+#define RST_HI      gpio_set(self->gpio, RST_PIN)
+#define RST_LO      gpio_reset(self->gpio, RST_PIN)
+#define DC_HI       gpio_set(self->gpio, DC_PIN)
+#define DC_LO       gpio_reset(self->gpio, DC_PIN)
+
+#define ILI9340_TFTWIDTH  240
+#define ILI9340_TFTHEIGHT 320
+
+#define ILI9340_NOP     0x00
+#define ILI9340_SWRESET 0x01
+#define ILI9340_RDDID   0x04
+#define ILI9340_RDDST   0x09
+
+#define ILI9340_SLPIN   0x10
+#define ILI9340_SLPOUT  0x11
+#define ILI9340_PTLON   0x12
+#define ILI9340_NORON   0x13
+
+#define ILI9340_RDMODE  0x0A
+#define ILI9340_RDMADCTL  0x0B
+#define ILI9340_RDPIXFMT  0x0C
+#define ILI9340_RDIMGFMT  0x0A
+#define ILI9340_RDSELFDIAG  0x0F
+
+#define ILI9340_INVOFF  0x20
+#define ILI9340_INVON   0x21
+#define ILI9340_GAMMASET 0x26
+#define ILI9340_DISPOFF 0x28
+#define ILI9340_DISPON  0x29
+
+#define ILI9340_CASET   0x2A
+#define ILI9340_PASET   0x2B
+#define ILI9340_RAMWR   0x2C
+#define ILI9340_RAMRD   0x2E
+
+#define ILI9340_PTLAR   0x30
+#define ILI9340_MADCTL  0x36
+
+
+#define ILI9340_MADCTL_MY  0x80
+#define ILI9340_MADCTL_MX  0x40
+#define ILI9340_MADCTL_MV  0x20
+#define ILI9340_MADCTL_ML  0x10
+#define ILI9340_MADCTL_RGB 0x00
+#define ILI9340_MADCTL_BGR 0x08
+#define ILI9340_MADCTL_MH  0x04
+
+#define ILI9340_PIXFMT  0x3A
+
+#define ILI9340_FRMCTR1 0xB1
+#define ILI9340_FRMCTR2 0xB2
+#define ILI9340_FRMCTR3 0xB3
+#define ILI9340_INVCTR  0xB4
+#define ILI9340_DFUNCTR 0xB6
+
+#define ILI9340_PWCTR1  0xC0
+#define ILI9340_PWCTR2  0xC1
+#define ILI9340_PWCTR3  0xC2
+#define ILI9340_PWCTR4  0xC3
+#define ILI9340_PWCTR5  0xC4
+#define ILI9340_VMCTR1  0xC5
+#define ILI9340_VMCTR2  0xC7
+
+#define ILI9340_RDID1   0xDA
+#define ILI9340_RDID2   0xDB
+#define ILI9340_RDID3   0xDC
+#define ILI9340_RDID4   0xDD
+
+#define ILI9340_GMCTRP1 0xE0
+#define ILI9340_GMCTRN1 0xE1
+
+// Color definitions
+#define ILI9340_BLACK   0x0000
+#define ILI9340_BLUE    0x001F // 5 bit
+#define ILI9340_RED     0xF800 // 5 bit
+#define ILI9340_GREEN   0x07E0 // 6 bit
+#define ILI9340_CYAN    0x07FF
+#define ILI9340_MAGENTA 0xF81F
+#define ILI9340_YELLOW  0xFFE0  
+#define ILI9340_WHITE   0xFFFF
+
+#define ILI9340_TRANSFER_TIMEOUT_MS 10
+
+struct ili9340 {
+    struct display_device dev;
+
+    spi_device_t spi;
+    gpio_device_t gpio; // for control lines
+
+    color_rgb_565_t *framebuffer;
+    int width, height, bpp;
+};
+
+static int _wr_command(struct ili9340 *self, uint8_t c) {
+    uint8_t tx[1] = {c};
+    uint8_t rx[1] = {0};
+    DC_LO;
+    return spi_transfer(self->spi, 0, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
+}
+
+static int _wr_data(struct ili9340 *self, uint8_t c) {
+    uint8_t tx[1] = {c};
+    uint8_t rx[1] = {0};
+
+    DC_HI;
+    return spi_transfer(self->spi, 0, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
+}
+
+void _ili9340_reinit_display(struct ili9340 *self){
+    RST_LO;
+    RST_HI;
+    thread_sleep_ms(5);
+    RST_LO;
+    thread_sleep_ms(20);
+    RST_HI;
+    thread_sleep_ms(150);
+
+    CS_LO;
+
+    _wr_command(self, 0xEF);
+    _wr_data(self, 0x03);
+    _wr_data(self, 0x80);
+    _wr_data(self, 0x02);
+
+    _wr_command(self, 0xCF);  
+    _wr_data(self, 0x00); 
+    _wr_data(self, 0XC1); 
+    _wr_data(self, 0X30); 
+
+    _wr_command(self, 0xED);  
+    _wr_data(self, 0x64); 
+    _wr_data(self, 0x03); 
+    _wr_data(self, 0X12); 
+    _wr_data(self, 0X81); 
+
+    _wr_command(self, 0xE8);  
+    _wr_data(self, 0x85); 
+    _wr_data(self, 0x00); 
+    _wr_data(self, 0x78); 
+
+    _wr_command(self, 0xCB);  
+    _wr_data(self, 0x39); 
+    _wr_data(self, 0x2C); 
+    _wr_data(self, 0x00); 
+    _wr_data(self, 0x34); 
+    _wr_data(self, 0x02); 
+
+    _wr_command(self, 0xF7);  
+    _wr_data(self, 0x20); 
+
+    _wr_command(self, 0xEA);  
+    _wr_data(self, 0x00); 
+    _wr_data(self, 0x00); 
+
+    _wr_command(self, ILI9340_PWCTR1);    //Power control 
+    _wr_data(self, 0x23);   //VRH[5:0] 
+
+    _wr_command(self, ILI9340_PWCTR2);    //Power control 
+    _wr_data(self, 0x10);   //SAP[2:0];BT[3:0] 
+
+    _wr_command(self, ILI9340_VMCTR1);    //VCM control 
+    _wr_data(self, 0x3e); //
+    _wr_data(self, 0x28); 
+
+    _wr_command(self, ILI9340_VMCTR2);    //VCM control2 
+    _wr_data(self, 0x86);  //--
+
+    _wr_command(self, ILI9340_MADCTL);    // Memory Access Control 
+    _wr_data(self, ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
+
+    _wr_command(self, ILI9340_PIXFMT);    
+    _wr_data(self, 0x55); 
+
+    _wr_command(self, ILI9340_FRMCTR1);    
+    _wr_data(self, 0x00);  
+    _wr_data(self, 0x18); 
+
+    _wr_command(self, ILI9340_DFUNCTR);    // Display Function Control 
+    _wr_data(self, 0x08); 
+    _wr_data(self, 0x82);
+    _wr_data(self, 0x27);  
+
+    _wr_command(self, 0xF2);    // 3Gamma Function Disable 
+    _wr_data(self, 0x00); 
+
+    _wr_command(self, ILI9340_GAMMASET);    //Gamma curve selected 
+    _wr_data(self, 0x01); 
+
+    _wr_command(self, ILI9340_GMCTRP1);    //Set Gamma 
+    _wr_data(self, 0x0F); 
+    _wr_data(self, 0x31); 
+    _wr_data(self, 0x2B); 
+    _wr_data(self, 0x0C); 
+    _wr_data(self, 0x0E); 
+    _wr_data(self, 0x08); 
+    _wr_data(self, 0x4E); 
+    _wr_data(self, 0xF1); 
+    _wr_data(self, 0x37); 
+    _wr_data(self, 0x07); 
+    _wr_data(self, 0x10); 
+    _wr_data(self, 0x03); 
+    _wr_data(self, 0x0E); 
+    _wr_data(self, 0x09); 
+    _wr_data(self, 0x00); 
+
+    _wr_command(self, ILI9340_GMCTRN1);    //Set Gamma 
+    _wr_data(self, 0x00); 
+    _wr_data(self, 0x0E); 
+    _wr_data(self, 0x14); 
+    _wr_data(self, 0x03); 
+    _wr_data(self, 0x11); 
+    _wr_data(self, 0x07); 
+    _wr_data(self, 0x31); 
+    _wr_data(self, 0xC1); 
+    _wr_data(self, 0x48); 
+    _wr_data(self, 0x08); 
+    _wr_data(self, 0x0F); 
+    _wr_data(self, 0x0C); 
+    _wr_data(self, 0x31); 
+    _wr_data(self, 0x36); 
+    _wr_data(self, 0x0F); 
+
+    _wr_command(self, ILI9340_SLPOUT);    //Exit Sleep 
+    thread_sleep_ms(120);
+    _wr_command(self, ILI9340_DISPON);    //Display on
+
+    CS_HI;
+}
 
 /*
-static struct ili9340 {
-	uint16_t screen_width, screen_height; 
-	int16_t cursor_x, cursor_y;
-	int8_t char_width, char_height;
-	uint16_t back_color, front_color;
-	uint16_t scroll_start; 
-} term;
-*/
-static void _wr_command(struct ili9340 *self, uint8_t c) {
-	DC_LO;
-	CS_LO;
-	
-  spi_writereadbyte(c);
-
-	CS_HI; 
-}
-
-
-static uint8_t _wr_data(struct ili9340 *self, uint8_t c) {
-	DC_HI; 
-  CS_LO; 
-  uint8_t r = spi_writereadbyte(c);
-	CS_HI;
-	return r; 
-} 
-
-static uint16_t _wr_data16(struct ili9340 *self, uint16_t c){
-	DC_HI; 
-  CS_LO; 
-  uint16_t r = spi_writereadbyte(c >> 8);
-  r <<= 8;
-  r |= spi_writereadbyte(c & 0xff); 
-	CS_HI;
-	return r; 
-}
-// Rather than a bazillion _wr_command(self, ) and _wr_data(self, ) calls, screen
-// initialization commands and arguments are organized in these tables
-// stored in PROGMEM.  The table may look bulky, but that's mostly the
-// formatting -- storage-wise this is hundreds of bytes more compact
-// than the equivalent code.  Companion function follows.
-#define DELAY 0x80
-
-void ili9340_init(struct ili9340 *self, serial_dev_t spi, gpio_pin_t cs_pin, gpio_pin_t dc_pin, gpio_pin_t rst_pin) {
-	self->sdev = spi;
-	self->cs_pin = cs_pin;
-	self->dc_pin = dc_pin;
-	self->rst_pin = rst_pin;
-	
-	gpio_configure(cs_pin, GP_OUTPUT); 
-	gpio_configure(rst_pin, GP_OUTPUT); 
-	gpio_configure(dc_pin, GP_OUTPUT);
-	
-	RST_LO; 
-
-  RST_HI; 
-  delay_us(5000); 
-  RST_LO; 
-  delay_us(20000);
-  RST_HI; 
-  delay_us(150000L);
-
-  _wr_command(self, 0xEF);
-  _wr_data(self, 0x03);
-  _wr_data(self, 0x80);
-  _wr_data(self, 0x02);
-
-  _wr_command(self, 0xCF);  
-  _wr_data(self, 0x00); 
-  _wr_data(self, 0XC1); 
-  _wr_data(self, 0X30); 
-
-  _wr_command(self, 0xED);  
-  _wr_data(self, 0x64); 
-  _wr_data(self, 0x03); 
-  _wr_data(self, 0X12); 
-  _wr_data(self, 0X81); 
- 
-  _wr_command(self, 0xE8);  
-  _wr_data(self, 0x85); 
-  _wr_data(self, 0x00); 
-  _wr_data(self, 0x78); 
-
-  _wr_command(self, 0xCB);  
-  _wr_data(self, 0x39); 
-  _wr_data(self, 0x2C); 
-  _wr_data(self, 0x00); 
-  _wr_data(self, 0x34); 
-  _wr_data(self, 0x02); 
- 
-  _wr_command(self, 0xF7);  
-  _wr_data(self, 0x20); 
-
-  _wr_command(self, 0xEA);  
-  _wr_data(self, 0x00); 
-  _wr_data(self, 0x00); 
- 
-  _wr_command(self, ILI9340_PWCTR1);    //Power control 
-  _wr_data(self, 0x23);   //VRH[5:0] 
- 
-  _wr_command(self, ILI9340_PWCTR2);    //Power control 
-  _wr_data(self, 0x10);   //SAP[2:0];BT[3:0] 
- 
-  _wr_command(self, ILI9340_VMCTR1);    //VCM control 
-  _wr_data(self, 0x3e); //
-  _wr_data(self, 0x28); 
-  
-  _wr_command(self, ILI9340_VMCTR2);    //VCM control2 
-  _wr_data(self, 0x86);  //--
- 
-  _wr_command(self, ILI9340_MADCTL);    // Memory Access Control 
-  _wr_data(self, ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
-
-  _wr_command(self, ILI9340_PIXFMT);    
-  _wr_data(self, 0x55); 
-  
-  _wr_command(self, ILI9340_FRMCTR1);    
-  _wr_data(self, 0x00);  
-  _wr_data(self, 0x18); 
- 
-  _wr_command(self, ILI9340_DFUNCTR);    // Display Function Control 
-  _wr_data(self, 0x08); 
-  _wr_data(self, 0x82);
-  _wr_data(self, 0x27);  
- 
-  _wr_command(self, 0xF2);    // 3Gamma Function Disable 
-  _wr_data(self, 0x00); 
- 
-  _wr_command(self, ILI9340_GAMMASET);    //Gamma curve selected 
-  _wr_data(self, 0x01); 
- 
-  _wr_command(self, ILI9340_GMCTRP1);    //Set Gamma 
-  _wr_data(self, 0x0F); 
-  _wr_data(self, 0x31); 
-  _wr_data(self, 0x2B); 
-  _wr_data(self, 0x0C); 
-  _wr_data(self, 0x0E); 
-  _wr_data(self, 0x08); 
-  _wr_data(self, 0x4E); 
-  _wr_data(self, 0xF1); 
-  _wr_data(self, 0x37); 
-  _wr_data(self, 0x07); 
-  _wr_data(self, 0x10); 
-  _wr_data(self, 0x03); 
-  _wr_data(self, 0x0E); 
-  _wr_data(self, 0x09); 
-  _wr_data(self, 0x00); 
-  
-  _wr_command(self, ILI9340_GMCTRN1);    //Set Gamma 
-  _wr_data(self, 0x00); 
-  _wr_data(self, 0x0E); 
-  _wr_data(self, 0x14); 
-  _wr_data(self, 0x03); 
-  _wr_data(self, 0x11); 
-  _wr_data(self, 0x07); 
-  _wr_data(self, 0x31); 
-  _wr_data(self, 0xC1); 
-  _wr_data(self, 0x48); 
-  _wr_data(self, 0x08); 
-  _wr_data(self, 0x0F); 
-  _wr_data(self, 0x0C); 
-  _wr_data(self, 0x31); 
-  _wr_data(self, 0x36); 
-  _wr_data(self, 0x0F); 
-
-  _wr_command(self, ILI9340_SLPOUT);    //Exit Sleep 
-  delay_us(120000L); 		
-  _wr_command(self, ILI9340_DISPON);    //Display on
-
-  self->screen_width = ILI9340_TFTWIDTH;
-  self->screen_height = ILI9340_TFTHEIGHT;
-  self->char_height = 8;
-  self->char_width = 6;
-  self->back_color = 0x0000;
-  self->front_color = 0xffff;
-  self->cursor_x = self->cursor_y = 0;
-  self->scroll_start = 0; 
-}
-
-/*
-void ili9340_setScrollStart(struct ili9340 *self, uint16_t start){
-  _wr_command(self, 0x37); // Vertical Scroll definition.
-  _wr_data16(self, start);
-  term.scroll_start = start; 
-}*/
-
-
 void ili9340_setScrollMargins(struct ili9340 *self, uint16_t top, uint16_t bottom) {
-  // Did not pass in VSA as TFA+VSA=BFA must equal 320
-	_wr_command(self, 0x33); // Vertical Scroll definition.
-  _wr_data16(self, top);
-  _wr_data16(self, 320-(top+bottom));
-  _wr_data16(self, bottom); 
-}
-
-static void _ili9340_setAddrWindow(struct ili9340 *self, int16_t x0, int16_t y0, int16_t x1, int16_t y1){
-	_wr_command(self, ILI9340_CASET); // Column addr set
-  _wr_data(self, x0 >> 8);
-  _wr_data(self, x0 & 0xFF);     // XSTART 
-  _wr_data(self, x1 >> 8);
-  _wr_data(self, x1 & 0xFF);     // XEND
-
-  _wr_command(self, ILI9340_PASET); // Row addr set
-  _wr_data(self, y0>>8);
-  _wr_data(self, y0);     // YSTART
-  _wr_data(self, y1>>8);
-  _wr_data(self, y1);     // YEND
-}
-
-static void ili9340_setAddrWindow_WR(struct ili9340 *self, int16_t x0, int16_t y0, int16_t x1,
- int16_t y1) {
-  _ili9340_setAddrWindow(self, x0, y0, x1, y1); 
-  _wr_command(self, ILI9340_RAMWR); // write to RAM
-}
-
-void ili9340_readRect(struct ili9340 *self, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t *data){
-  _ili9340_setAddrWindow(self, x, y, x + w - 1, y + h - 1);
-  //_wr_command(self, ILI9340_RAMRD); // read RAM
-  CS_LO;
-  DC_LO; 
-	
-	spi_writereadbyte(ILI9340_RAMRD);
-	//spi_writereadbyte(0);
-	
-	DC_HI;
-	
-	spi_writereadbyte(0);
-	
-  uint16_t cnt = w * h;
-  for(uint16_t c = 0; c < cnt; c++){
-		// DAMN! this took a while to figure out :)
-		// The data is one byte per color! NOT packed!
-		data[c] = RGB16(spi_writereadbyte(0), spi_writereadbyte(0), spi_writereadbyte(0));
-	}
-
-	CS_HI; 
-}
-
-void ili9340_writeRect(struct ili9340 *self,uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t *data){
-  _ili9340_setAddrWindow(self, x, y, x + w - 1, y + h - 1);
-  /*_wr_command(self, ILI9340_RAMWR); // read RAM
-  
-	DC_HI; 
-	CS_LO; 
-	*/
-	CS_LO;
-  DC_LO; 
-	
-	spi_writereadbyte(ILI9340_RAMWR);
-	//spi_writereadbyte(0);
-	
-	DC_HI;
-	
-  uint16_t cnt = w * h;
-  for(uint16_t c = 0; c < cnt; c++){
-		uint16_t d = *data++;
-		spi_writereadbyte(d >> 8);
-		spi_writereadbyte(d);
-	}
-
-	CS_HI; 
-}
-/*
-static void ili9340_pushColor(struct ili9340 *self, uint16_t color) {
-  DC_HI;
-  CS_LO; 
-
-  spi_writereadbyte(color >> 8);
-  spi_writereadbyte(color);
-
-	CS_HI; 
-}*/
-uint16_t ili9340_width(struct ili9340 *self){
-	return self->screen_width;
-}
-
-uint16_t ili9340_height(struct ili9340 *self){
-	return self->screen_height;
-}
-
-// fill a rectangle
-void ili9340_fillRect(struct ili9340 *self, uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-  uint16_t color) {
-	//y = (y + term.scroll_start) % term.screen_height;
-	
-  // rudimentary clipping (drawChar w/big text requires this)
-  //if((x >= t->screen_width) || (y >= t->screen_height)) return;
-  if((x + w - 1) >= self->screen_width)  w = self->screen_width  - x;
-  if((y + h - 1) >= self->screen_height) h = self->screen_height - y;
-
-	ili9340_setAddrWindow_WR(self, 
-		x, 					y,
-		x + w - 1, 	y + h - 1);
-
-	uint8_t hi = color >> 8, lo = color;
-
-	DC_HI; 
-	CS_LO; 
-	
-	for(y=h; y>0; y--) {
-		for(x=w; x>0; x--) {
-			spi_writereadbyte(hi);
-			spi_writereadbyte(lo);
-		}
-	}
-	CS_HI;
-}
-
-void ili9340_drawLine(struct ili9340 *self, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t col){
-  int dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
-  int dy = abs(y1-y0), sy = y0<y1 ? 1 : -1; 
-  int err = (dx>dy ? dx : -dy)/2, e2;
-	
-	uint8_t hi = col >> 8, lo = col;
-	
-  for(;;){
-		ili9340_setAddrWindow_WR(self, x0, y0, x0, y0);
-
-		DC_HI; 
-		CS_LO; 
-		
-		spi_writereadbyte(hi);
-		spi_writereadbyte(lo);
-		
-		CS_HI;
-		
-    if (x0==x1 && y0==y1) break;
-    e2 = err;
-    if (e2 >-dx) { err -= dy; x0 += sx; }
-    if (e2 < dy) { err += dx; y0 += sy; }
-  }
-  
-}
-/*
-THIS CODE BELONGS SOMEWHERE ELSE
-
-void ili9340_setBackColor(struct ili9340 *self, uint16_t col){
-	//uint8_t r, uint8_t g, uint8_t b
-	struct ili9340 *t = &term;
-	t->back_color = col; 
-	//t->back_color = (uint16_t)r << 8 | (uint16_t)g << 4 | b; 
-}
-
-void ili9340_setFrontColor(uint16_t col){
-	struct ili9340 *t = &term;
-	t->front_color = col; 
-	//t->front_color = (uint16_t)r << 8 | (uint16_t)g << 4 | b; 
-}
-
-void ili9340_drawChar(uint16_t x, uint16_t y, uint8_t ch){
-	struct ili9340 *t = &term;
-	
-	ili9340_setAddrWindow_WR(x, y, x+t->char_width-1, y + t->char_height);
-
-	DC_HI;
-	CS_LO;
-
-	// character glyph buffer
-	char _buf[5]; 
-	for(int j = 0; j < 5; j++){
-		_buf[j] = pgm_read_byte(&font[ch * 5 + j]);
-	}
-	for(int b = 0; b < 8; b++){
-		// draw 5 pixels for each column of the glyph
-		for(int j = 0; j < 5; j++){
-			uint16_t pix = t->back_color;
-			if(_buf[j] & (1 << b))
-				pix = t->front_color;
-			spi_writereadbyte(pix >> 8);
-			spi_writereadbyte(pix);
-		}
-		
-		// draw one more separator pixel
-		spi_writereadbyte(t->back_color >> 8);
-		spi_writereadbyte(t->back_color);
-	}
-	CS_HI;
-}
-
-void ili9340_drawString(uint16_t x, uint16_t y, const char *text){
-	//static char _buffer[128]; // buffer for 1 char
-	//int len = strlen(text);
-	struct ili9340 *t = &term;
-	
-	for(const char *_ch = text; *_ch; _ch++){
-		//DDRD |= _BV(5);
-		//PORTD |= _BV(5); 
-		if(!*_ch) break;
-		
-		ili9340_drawChar(x, y, *_ch);
-		x += t->char_width; 
-		//PORTD &= ~_BV(5); 
-	}
-
-}
-
-void ili9340_drawSprite(uint16_t x, uint16_t y, const uint8_t *sprite, const uint16_t *palette){
-
-  ili9340_setAddrWindow_WR(x, y, x + 8 - 1, y + 8 - 1);
-
-	DC_HI;
-  CS_LO; 
-
-  for(int c = 0; c < 64; c++){
-		uint8_t idx = pgm_read_byte(sprite + c);
-		uint16_t pix = pgm_read_word(palette + idx); 
-		spi_writereadbyte(pix >> 8);
-    spi_writereadbyte(pix);
-  }
-  
-  CS_HI; 
+    // Did not pass in VSA as TFA+VSA=BFA must equal 320
+    _wr_command(self, 0x33); // Vertical Scroll definition.
+    _wr_data16(self, top);
+    _wr_data16(self, 320-(top+bottom));
+    _wr_data16(self, bottom); 
 }
 */
+static void _ili9340_setAddrWindow(struct ili9340 *self, int x0, int y0, int x1, int y1){
+    _wr_command(self, ILI9340_CASET); // Column addr set
+    _wr_data(self, (uint8_t)(x0 >> 8));
+    _wr_data(self, (uint8_t)(x0 & 0xFF));     // XSTART 
+    _wr_data(self, (uint8_t)(x1 >> 8));
+    _wr_data(self, (uint8_t)(x1 & 0xFF));     // XEND
 
-void ili9340_drawFastHLine(struct ili9340 *self, uint16_t x, uint16_t y, uint16_t w,
-  uint16_t color) {
-  // Rudimentary clipping
-  
-	//y = (y + term.scroll_start) % term.screen_height;
-	
-  if((x >= self->screen_width) || (y >= self->screen_height)) return;
-  if((x+w-1) >= self->screen_width)  w = self->screen_width-x;
-  
-  ili9340_setAddrWindow_WR(self, x, y, x+w-1, y);
-
-  uint8_t hi = color >> 8, lo = color;
-  DC_HI;
-  CS_LO; 
-  while (w--) {
-    spi_writereadbyte(hi);
-    spi_writereadbyte(lo);
-  }
-  CS_HI; 
+    _wr_command(self, ILI9340_PASET); // Row addr set
+    _wr_data(self, (uint8_t)(y0 >> 8));
+    _wr_data(self, (uint8_t)(y0 & 0xff));     // YSTART
+    _wr_data(self, (uint8_t)(y1 >> 8));
+    _wr_data(self, (uint8_t)(y1 & 0xff));     // YEND
 }
-
-
-void ili9340_drawFastVLine(struct ili9340 *self, uint16_t x, uint16_t y, uint16_t h,
-  uint16_t color) {
-	
-	ili9340_fillRect(self, (h > 0)?x:(x + h), y, 1, (h > 0)?(x + h):x, color); 
-}
-
+/*
 void ili9340_setRotation(struct ili9340 *self, uint8_t m) {
-  _wr_command(self, ILI9340_MADCTL);
-  int rotation = m % 4; // can't be higher than 3
-  switch (rotation) {
-   case 0:
-     _wr_data(self, ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
-     self->screen_width  = ILI9340_TFTWIDTH;
-     self->screen_height = ILI9340_TFTHEIGHT;
-     break;
-   case 1:
-     _wr_data(self, ILI9340_MADCTL_MV | ILI9340_MADCTL_BGR);
-     self->screen_width  = ILI9340_TFTHEIGHT;
-     self->screen_height = ILI9340_TFTWIDTH;
-     break;
-  case 2:
-    _wr_data(self, ILI9340_MADCTL_MY | ILI9340_MADCTL_BGR);
-     self->screen_width  = ILI9340_TFTWIDTH;
-     self->screen_height = ILI9340_TFTHEIGHT;
-    break;
-   case 3:
-     _wr_data(self, ILI9340_MADCTL_MV | ILI9340_MADCTL_MY | ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
-     self->screen_width  = ILI9340_TFTHEIGHT;
-     self->screen_height = ILI9340_TFTWIDTH;
-     break;
-  }
+    _wr_command(self, ILI9340_MADCTL);
+    int rotation = m % 4; // can't be higher than 3
+    switch (rotation) {
+        case 0:
+            _wr_data(self, ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
+            self->screen_width  = ILI9340_TFTWIDTH;
+            self->screen_height = ILI9340_TFTHEIGHT;
+            break;
+        case 1:
+            _wr_data(self, ILI9340_MADCTL_MV | ILI9340_MADCTL_BGR);
+            self->screen_width  = ILI9340_TFTHEIGHT;
+            self->screen_height = ILI9340_TFTWIDTH;
+            break;
+        case 2:
+            _wr_data(self, ILI9340_MADCTL_MY | ILI9340_MADCTL_BGR);
+            self->screen_width  = ILI9340_TFTWIDTH;
+            self->screen_height = ILI9340_TFTHEIGHT;
+            break;
+        case 3:
+            _wr_data(self, ILI9340_MADCTL_MV | ILI9340_MADCTL_MY | ILI9340_MADCTL_MX | ILI9340_MADCTL_BGR);
+            self->screen_width  = ILI9340_TFTHEIGHT;
+            self->screen_height = ILI9340_TFTWIDTH;
+            break;
+    }
+}*/
+
+static void _ili9340_refresh(display_device_t dev) {
+    struct ili9340 *self = container_of(dev, struct ili9340, dev.ops);
+    CS_LO;
+
+    _ili9340_setAddrWindow(self, 0, 0, self->width, self->height);
+    _wr_command(self, ILI9340_RAMWR); // write to RAM
+
+    DC_HI;
+
+    //spi_writereadbyte(color >> 8);
+    //spi_writereadbyte(color);
+
+    CS_HI;
 }
 
+int _ili9340_write_pixel(display_device_t dev, int x, int y, uint32_t color){
+    struct ili9340 *self = container_of(dev, struct ili9340, dev.ops);
+    if(!self->framebuffer) return -ENOMEM;
+    self->framebuffer[(self->bpp / 8) * (self->width * y + x)] = RGB888_TO_RGB565(color);
+    return 0;
+}
+
+static const struct display_device_ops _display_ops = {
+    .write_pixel = _ili9340_write_pixel
+};
+
+int _ili9340_probe(void *fdt, int fdt_node){
+    // find the gpio device for pins
+	int node = fdt_find_node_by_ref(fdt, fdt_node, "gpio");
+	if(node < 0) {
+		dbg_printk("ledpanel: nopins!\n");
+		return -EINVAL;
+	}
+
+    gpio_device_t gpio = gpio_find_by_node(fdt, node);
+    if(!gpio) {
+		dbg_printk("ledpanel: nogpio!\n");
+		return -EINVAL;
+	}
+
+    node = fdt_find_node_by_ref(fdt, fdt_node, "spi");
+	if(node < 0) {
+		dbg_printk("ledpanel: nospi!\n");
+		return -EINVAL;
+	}
+
+    spi_device_t spi = spi_find_by_node(fdt, node);
+    if(!spi) {
+		dbg_printk("ledpanel: nospi!\n");
+		return -EINVAL;
+	}
+
+	int width = fdt_get_int_or_default(fdt, fdt_node, "width", 240);
+	int height = fdt_get_int_or_default(fdt, fdt_node, "height", 320);
+
+    struct ili9340 *self = kzmalloc(sizeof(struct ili9340));
+    display_device_init(&self->dev, fdt_node, &_display_ops);
+
+    self->spi = spi;
+    self->gpio = gpio;
+    self->width = width;
+    self->height = height;
+    self->bpp = 16;
+
+    self->framebuffer = kzmalloc(sizeof(color_rgb_565_t) * (size_t)width * (size_t)height);
+    if(!self->framebuffer){
+        dbg_printk("ili9340: nofb\n");
+        return -ENOMEM;
+    }
+
+    display_device_register(&self->dev);
+
+    return 0;
+}
+
+int _ili9340_remove(void *fdt, int fdt_node){
+    return 0;
+}
+
+DEVICE_DRIVER(ili9340, "mk,ili9340", _ili9340_probe, _ili9340_remove)
