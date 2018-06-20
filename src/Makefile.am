@@ -3,7 +3,8 @@ libdriver_a_SOURCES=\
     accgyro/mpu6500.c\
     baro/bmp280.c\
     disp/ili9340.c\
-    disp/ledpanel.c
+    disp/ledpanel.c\
+    pointer/pmw3360.c
 libdriver_a_LIBADD=
 
 other_sources =\

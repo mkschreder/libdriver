@@ -139,7 +139,7 @@ libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
 	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
-	disp/ledpanel.$(OBJEXT)
+	disp/ledpanel.$(OBJEXT) pointer/pmw3360.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -338,7 +338,8 @@ libdriver_a_SOURCES = \
     accgyro/mpu6500.c\
     baro/bmp280.c\
     disp/ili9340.c\
-    disp/ledpanel.c
+    disp/ledpanel.c\
+    pointer/pmw3360.c
 
 libdriver_a_LIBADD = 
 other_sources = \
@@ -466,6 +467,14 @@ disp/ili9340.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
 disp/ledpanel.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
+pointer/$(am__dirstamp):
+	@$(MKDIR_P) pointer
+	@: > pointer/$(am__dirstamp)
+pointer/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) pointer/$(DEPDIR)
+	@: > pointer/$(DEPDIR)/$(am__dirstamp)
+pointer/pmw3360.$(OBJEXT): pointer/$(am__dirstamp) \
+	pointer/$(DEPDIR)/$(am__dirstamp)
 
 libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdriver_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libdriver.a
@@ -477,6 +486,7 @@ mostlyclean-compile:
 	-rm -f accgyro/*.$(OBJEXT)
 	-rm -f baro/*.$(OBJEXT)
 	-rm -f disp/*.$(OBJEXT)
+	-rm -f pointer/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
@@ -485,6 +495,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/pmw3360.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -637,6 +648,8 @@ distclean-generic:
 	-rm -f baro/$(am__dirstamp)
 	-rm -f disp/$(DEPDIR)/$(am__dirstamp)
 	-rm -f disp/$(am__dirstamp)
+	-rm -f pointer/$(DEPDIR)/$(am__dirstamp)
+	-rm -f pointer/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
@@ -647,7 +660,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -693,7 +706,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
