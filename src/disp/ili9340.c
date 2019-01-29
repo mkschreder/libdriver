@@ -140,7 +140,7 @@ static int _wr_command(struct ili9340 *self, uint8_t c) {
     uint8_t tx[1] = {c};
     uint8_t rx[1] = {0};
     DC_LO;
-    return spi_transfer(self->spi, 0, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
+    return spi_transfer(self->spi, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
 }
 
 static int _wr_data(struct ili9340 *self, uint8_t c) {
@@ -148,7 +148,7 @@ static int _wr_data(struct ili9340 *self, uint8_t c) {
     uint8_t rx[1] = {0};
 
     DC_HI;
-    return spi_transfer(self->spi, 0, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
+    return spi_transfer(self->spi, tx, rx, 1, ILI9340_TRANSFER_TIMEOUT_MS);
 }
 
 void _ili9340_reinit_display(struct ili9340 *self){

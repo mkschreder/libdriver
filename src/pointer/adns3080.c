@@ -8,66 +8,71 @@
 
 #include <libfdt/libfdt.h>
 
-#define PMW3360_PRODUCT_ID  0x00
-#define PMW3360_REVISION_ID 0x01
-#define PMW3360_MOTION  0x02
-#define PMW3360_DELTA_X_L 0x03
-#define PMW3360_DELTA_X_H 0x04
-#define PMW3360_DELTA_Y_L 0x05
-#define PMW3360_DELTA_Y_H 0x06
-#define PMW3360_SQUAL 0x07
-#define PMW3360_RAW_DATA_SUM  0x08
-#define PMW3360_MAXIMUM_RAW_DATA  0x09
-#define PMW3360_MINIMUM_RAW_DATA  0x0A
-#define PMW3360_SHUTTER_LOWER 0x0B
-#define PMW3360_SHUTTER_UPPER 0x0C
-#define PMW3360_CONTROL 0x0D
-#define PMW3360_CONFIG1 0x0F
-#define PMW3360_CONFIG2 0x10
-#define PMW3360_ANGLE_TUNE  0x11
-#define PMW3360_FRAME_CAPTURE 0x12
-#define PMW3360_SROM_ENABLE 0x13
-#define PMW3360_RUN_DOWNSHIFT 0x14
-#define PMW3360_REST1_RATE_LOWER  0x15
-#define PMW3360_REST1_RATE_UPPER  0x16
-#define PMW3360_REST1_DOWNSHIFT 0x17
-#define PMW3360_REST2_RATE_LOWER  0x18
-#define PMW3360_REST2_RATE_UPPER  0x19
-#define PMW3360_REST2_DOWNSHIFT 0x1A
-#define PMW3360_REST3_RATE_LOWER  0x1B
-#define PMW3360_REST3_RATE_UPPER  0x1C
-#define PMW3360_OBSERVATION 0x24
-#define PMW3360_DATA_OUT_LOWER  0x25
-#define PMW3360_DATA_OUT_UPPER  0x26
-#define PMW3360_RAW_DATA_DUMP 0x29
-#define PMW3360_SROM_ID 0x2A
-#define PMW3360_MIN_SQ_RUN  0x2B
-#define PMW3360_RAW_DATA_THRESHOLD  0x2C
-#define PMW3360_CONFIG5 0x2F
-#define PMW3360_POWER_UP_RESET  0x3A
-#define PMW3360_SHUTDOWN  0x3B
-#define PMW3360_INVERSE_PRODUCT_ID  0x3F
-#define PMW3360_LIFTCUTOFF_TUNE3  0x41
-#define PMW3360_ANGLE_SNAP  0x42
-#define PMW3360_LIFTCUTOFF_TUNE1  0x4A
-#define PMW3360_MOTION_BURST  0x50
-#define PMW3360_LIFTCUTOFF_TUNE_TIMEOUT 0x58
+// ADNS3080 hardware config
+#define ADNS3080_PIXELS_X                 30
+#define ADNS3080_PIXELS_Y                 30
+#define ADNS3080_CLOCK_SPEED			  24000000
 
-#define PMW3360_SROM_LOAD_BURST 0x62
-#define PMW3360_LIFT_CONFIG 0x63
-#define PMW3360_RAW_DATA_BURST  0x64
-#define PMW3360_LIFTCUTOFF_TUNE2  0x65
+// Register Map for the ADNS3080 Optical OpticalFlow Sensor
+#define ADNS3080_PRODUCT_ID            0x00
+#define ADNS3080_REVISION_ID           0x01
+#define ADNS3080_MOTION                0x02
+#define ADNS3080_DELTA_X               0x03
+#define ADNS3080_DELTA_Y               0x04
+#define ADNS3080_SQUAL                 0x05
+#define ADNS3080_PIXEL_SUM             0x06
+#define ADNS3080_MAXIMUM_PIXEL         0x07
+#define ADNS3080_CONFIGURATION_BITS    0x0a
+#define ADNS3080_EXTENDED_CONFIG       0x0b
+#define ADNS3080_DATA_OUT_LOWER        0x0c
+#define ADNS3080_DATA_OUT_UPPER        0x0d
+#define ADNS3080_SHUTTER_LOWER         0x0e
+#define ADNS3080_SHUTTER_UPPER         0x0f
+#define ADNS3080_FRAME_PERIOD_LOWER    0x10
+#define ADNS3080_FRAME_PERIOD_UPPER    0x11
+#define ADNS3080_MOTION_CLEAR          0x12
+#define ADNS3080_FRAME_CAPTURE         0x13
+#define ADNS3080_SROM_ENABLE           0x14
+#define ADNS3080_FRAME_PERIOD_MAX_BOUND_LOWER      0x19
+#define ADNS3080_FRAME_PERIOD_MAX_BOUND_UPPER      0x1a
+#define ADNS3080_FRAME_PERIOD_MIN_BOUND_LOWER      0x1b
+#define ADNS3080_FRAME_PERIOD_MIN_BOUND_UPPER      0x1c
+#define ADNS3080_SHUTTER_MAX_BOUND_LOWER           0x1e
+#define ADNS3080_SHUTTER_MAX_BOUND_UPPER           0x1e
+#define ADNS3080_SROM_ID               0x1f
+#define ADNS3080_POWER_UP_RESET        0x3a
+#define ADNS3080_OBSERVATION           0x3d
+#define ADNS3080_INVERSE_PRODUCT_ID    0x3f
+#define ADNS3080_PIXEL_BURST           0x40
+#define ADNS3080_MOTION_BURST          0x50
+#define ADNS3080_SROM_LOAD             0x60
 
-#define PMW3360_TRANSFER_TIMEOUT 30
+// Configuration Bits
+#define ADNS3080_LED_MODE_ALWAYS_ON        0x00
+#define ADNS3080_LED_MODE_WHEN_REQUIRED    0x01
 
-struct pmw3360 {
+#define ADNS3080_RESOLUTION_400			400
+#define ADNS3080_RESOLUTION_1600		1600
+
+// Extended Configuration bits
+#define ADNS3080_SERIALNPU_OFF	0x02
+
+#define ADNS3080_FRAME_RATE_MAX         6469
+#define ADNS3080_FRAME_RATE_MIN         2000
+
+#define ADNS3080_IMAGE_WIDTH 30
+#define ADNS3080_IMAGE_HEIGHT 30
+
+#define ADNS3080_TRANSFER_TIMEOUT 30
+
+struct adns3080 {
 	struct pointer_device dev;
 	spi_device_t spi;
 	gpio_device_t gpio;
 	uint8_t srom_id;
 };
 
-static const unsigned char _pmw3360_fw[] = {
+static const unsigned char _adns3080_fw[] = {
 0x01, 0x04, 0x8e, 0x96, 0x6e, 0x77, 0x3e, 0xfe, 0x7e, 0x5f, 0x1d, 0xb8, 0xf2, 0x66, 0x4e, 
 0xff, 0x5d, 0x19, 0xb0, 0xc2, 0x04, 0x69, 0x54, 0x2a, 0xd6, 0x2e, 0xbf, 0xdd, 0x19, 0xb0, 
 0xc3, 0xe5, 0x29, 0xb1, 0xe0, 0x23, 0xa5, 0xa9, 0xb1, 0xc1, 0x00, 0x82, 0x67, 0x4c, 0x1a, 
@@ -342,147 +347,164 @@ static const unsigned char _pmw3360_fw[] = {
 0x74, 0x4b, 0x14, 0xaa, 0xb7, 0xec, 0x3b, 0xd5, 0x28, 0xd2, 0x07, 0x6d, 0x39, 0xd1, 0x20, 
 0xc2, 0xe7, 0x4c, 0x1a, 0x97, 0x8d, 0x98, 0xb2, 0xc7, 0x0c, 0x59, 0x28, 0xf3, 0x9b };
 
-int _pmw3360_write(struct pmw3360 *self, uint8_t data){
+int _adns3080_write(struct adns3080 *self, uint8_t data){
     uint8_t tx[1] = {data};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
     return ret;
 }
 
-int _pmw3360_read(struct pmw3360 *self, uint8_t *data){
+int _adns3080_read(struct adns3080 *self, uint8_t *data){
     uint8_t tx[1] = {0};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
 	*data = rx[0];
     return ret;
 }
 
-void _pmw3360_begin(struct pmw3360 *self){
+void _adns3080_begin(struct adns3080 *self){
     gpio_reset(self->gpio, 0);
 }
 
-void _pmw3360_end(struct pmw3360 *self){
+void _adns3080_end(struct adns3080 *self){
 	thread_sleep_us(20);
     gpio_set(self->gpio, 0);
 	thread_sleep_us(100);
 }
 
-int _pmw3360_read_reg(struct pmw3360 *self, uint8_t reg, uint8_t *data){
+int _adns3080_read_reg(struct adns3080 *self, uint8_t reg, uint8_t *data){
 	int ret = 0;
-	_pmw3360_begin(self);
-	ret |= _pmw3360_write(self, reg & 0x7f);
+    gpio_reset(self->gpio, 0);
+
+	ret |= _adns3080_write(self, reg & 0x7f);
 	thread_sleep_us(100);
-	ret |= _pmw3360_read(self, data);
+	ret |= _adns3080_read(self, data);
 	thread_sleep_us(1);
+
     gpio_set(self->gpio, 0);
-	thread_sleep_us(20);
 	if(ret) return -1;
 	return 0;
 }
 
-int _pmw3360_write_reg(struct pmw3360 *self, uint8_t reg, uint8_t data){
+int _adns3080_write_reg(struct adns3080 *self, uint8_t reg, uint8_t data){
 	int ret = 0;
-	_pmw3360_begin(self);
-	ret |= _pmw3360_write(self, reg | 0x80);
-	ret |= _pmw3360_write(self, data);
-	_pmw3360_end(self);
+	_adns3080_begin(self);
+	ret |= _adns3080_write(self, reg | 0x80);
+    thread_sleep_us(50);
+	ret |= _adns3080_write(self, data);
+    thread_sleep_us(50);
+	_adns3080_end(self);
 	if(ret) return -1;
     return 0;
 }
-
-int _pmw3360_upload_firmware(struct pmw3360 *self){
+#if 0
+int _adns3080_upload_firmware(struct adns3080 *self){
 	//Write 0 to Rest_En bit of Config2 register to disable Rest mode.
-	_pmw3360_write_reg(self, PMW3360_CONFIG2, 0x20);
+	_adns3080_write_reg(self, ADNS3080_CONFIG2, 0x20);
 
 	// write 0x1d in SROM_enable reg for initializing
-	_pmw3360_write_reg(self, PMW3360_SROM_ENABLE, 0x1d); 
+	_adns3080_write_reg(self, ADNS3080_SROM_ENABLE, 0x1d); 
 
 	thread_sleep_ms(10);
 
 	// write 0x18 to SROM_enable to start SROM download
-	_pmw3360_write_reg(self, PMW3360_SROM_ENABLE, 0x18); 
+	_adns3080_write_reg(self, ADNS3080_SROM_ENABLE, 0x18); 
 
 	// write the SROM file (=firmware data) 
-	_pmw3360_begin(self);
+	_adns3080_begin(self);
 
-	_pmw3360_write(self, PMW3360_SROM_LOAD_BURST | 0x80); // write burst destination adress
+	_adns3080_write(self, ADNS3080_SROM_LOAD_BURST | 0x80); // write burst destination adress
 
 	thread_sleep_us(15);
 
 	// send all bytes of the firmware
-	for(size_t i = 0; i < sizeof(_pmw3360_fw); i++){ 
-		_pmw3360_write(self, _pmw3360_fw[i]);
+	for(size_t i = 0; i < sizeof(_adns3080_fw); i++){ 
+		_adns3080_write(self, _adns3080_fw[i]);
 		thread_sleep_us(15);
 	}
 
-	_pmw3360_end(self);
+	_adns3080_end(self);
 
 	//Read the SROM_ID register to verify the ID before any other register reads or writes.
 	uint8_t srom_id = 0;
-	_pmw3360_read_reg(self, PMW3360_SROM_ID, &srom_id);
+	_adns3080_read_reg(self, ADNS3080_SROM_ID, &srom_id);
 	self->srom_id = srom_id;
 
 	//Write 0x00 to Config2 register for wired mouse or 0x20 for wireless mouse design.
-	_pmw3360_write_reg(self, PMW3360_CONFIG2, 0x00);
+	_adns3080_write_reg(self, ADNS3080_CONFIG2, 0x00);
 
 	// set initial CPI resolution
-	_pmw3360_write_reg(self, PMW3360_CONFIG1, 0x15);
+	_adns3080_write_reg(self, ADNS3080_CONFIG1, 0x15);
 
 	if(srom_id != 4) return -1;
 	return 0;
 }
-
-int _pmw3360_frame_capture(struct pmw3360 *self){
+#endif
+int _adns3080_frame_capture(struct adns3080 *self){
 	int ret = 0;
-	ret |= _pmw3360_write_reg(self, PMW3360_CONFIG2, 0x0);
-	ret |= _pmw3360_write_reg(self, PMW3360_FRAME_CAPTURE, 0x83);
-	ret |= _pmw3360_write_reg(self, PMW3360_FRAME_CAPTURE, 0xc5);
+	//ret |= _adns3080_write_reg(self, ADNS3080_CONFIG2, 0x0);
+	ret |= _adns3080_write_reg(self, ADNS3080_FRAME_CAPTURE, 0x83);
+	//ret |= _adns3080_write_reg(self, ADNS3080_FRAME_CAPTURE, 0xc5);
 
-	_pmw3360_begin(self);
-	ret |= _pmw3360_write(self, PMW3360_RAW_DATA_BURST);
-	thread_sleep_us(160);
+	thread_sleep_us(1510);
+
+	_adns3080_begin(self);
+
+	ret |= _adns3080_write(self, ADNS3080_PIXEL_BURST);
 	printk("\x1b[1;1H");
 	static const char _letters[] = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
-	for(size_t c = 0; c < 1296; c++){
-		if(c != 0 && c % 36 == 0) printk("\n");
-		uint8_t ch = 0;
-		ret |= _pmw3360_read(self, &ch);
+    bool sync = false;
+	uint8_t ch = 0;
+	for(size_t c = 0; c < ADNS3080_IMAGE_WIDTH * ADNS3080_IMAGE_HEIGHT; c++){
+		ret |= _adns3080_read(self, &ch);
+        if(!sync && !(ch & 0x40)) {
+            c = 0;
+            continue;
+        }
+        sync = true;
+		if(c != 0 && c % ADNS3080_IMAGE_WIDTH == 0) printk("\n");
+        ch = (uint8_t)~(ch << 2);
+        (void)_letters;
 		printk("%c", _letters[ch * sizeof(_letters) / 256]);
+		printk("%c", _letters[ch * sizeof(_letters) / 256]);
+		//printk("%02x", ch);
 	}
-	_pmw3360_end(self);
+
+	_adns3080_end(self);
+
 	thread_sleep_ms(20);
 	printk("\n");
 	return (ret)?-1:0;
 }
 
-int _pmw3360_pointer_read(pointer_device_t dev, struct pointer_reading *data){
-    struct pmw3360 *self = container_of(dev, struct pmw3360, dev.ops);
+int _adns3080_pointer_read(pointer_device_t dev, struct pointer_reading *data){
+    struct adns3080 *self = container_of(dev, struct adns3080, dev.ops);
 
 	int ret = 0;
-	uint8_t motion = 0, xl = 0, xh = 0, yl = 0, yh = 0, qual = 0;
+	uint8_t motion = 0, xl = 0, yl = 0, qual = 0;
 
 	// THIS IS A TEST
 	printk("\x1b[2J");
-	for(int c = 0; c < 1000; c++){
-        ret |= _pmw3360_write_reg(self, PMW3360_MOTION, 0x01);
-        ret |= _pmw3360_read_reg(self, PMW3360_MOTION, &motion);
-        ret |= _pmw3360_read_reg(self, PMW3360_DELTA_X_L, &xl);
-        ret |= _pmw3360_read_reg(self, PMW3360_DELTA_X_H, &xh);
-        ret |= _pmw3360_read_reg(self, PMW3360_DELTA_Y_L, &yl);
-        ret |= _pmw3360_read_reg(self, PMW3360_DELTA_Y_H, &yh);
-        ret |= _pmw3360_read_reg(self, PMW3360_SQUAL, &qual);
-        int x = (int16_t)((uint16_t)xh << 8 | (uint16_t)xl);
-        int y = (int16_t)((uint16_t)yh << 8 | (uint16_t)yl);
+    int x = 0, y = 0;
+	for(int c = 0; c < 10000; c++){
+        ret |= _adns3080_write_reg(self, ADNS3080_MOTION, 0x01);
+        ret |= _adns3080_read_reg(self, ADNS3080_MOTION, &motion);
+        ret |= _adns3080_read_reg(self, ADNS3080_DELTA_X, &xl);
+        ret |= _adns3080_read_reg(self, ADNS3080_DELTA_Y, &yl);
+        ret |= _adns3080_read_reg(self, ADNS3080_SQUAL, &qual);
+        int xx = (int8_t)xl;
+        int yy = (int8_t)yl;
 
         memset(data, 0, sizeof(*data));
 
-        data->delta_x = (int16_t)x;
-        data->delta_y = (int16_t)y;
+        data->delta_x = (int16_t)xx;
+        data->delta_y = (int16_t)yy;
 
-        /*
-		printk("X: %d, Y: %d, Q: %d         \r", x, y, qual);
-		*/
-		_pmw3360_frame_capture(self);
+        x += xx;
+        y += yy;
+
+		//printk("X: %d, Y: %d, Q: %d         \r", x, y, qual);
+		_adns3080_frame_capture(self);
 		thread_sleep_ms(10);
 	}
 	return 0;
@@ -495,77 +517,89 @@ int _pmw3360_pointer_read(pointer_device_t dev, struct pointer_reading *data){
 }
 
 static const struct pointer_device_ops _pointer_ops = {
-    .read = _pmw3360_pointer_read
+    .read = _adns3080_pointer_read
 };
 
-int _pmw3360_probe(void *fdt, int fdt_node){
+int _adns3080_probe(void *fdt, int fdt_node){
 	// find the spi device for com
 	int node = fdt_find_node_by_ref(fdt, fdt_node, "spi");
 	if(node < 0) {
-		dbg_printk("pmw3360: nospi!\n");
+		dbg_printk("adns3080: nospi!\n");
 		return -EINVAL;
 	}
 
     spi_device_t spi = spi_find_by_node(fdt, node);
     if(!spi) {
-		dbg_printk("pmw3360: nospidev!\n");
+		dbg_printk("adns3080: nospidev!\n");
 		return -EINVAL;
 	}
 
     // find the spi device for com
 	node = fdt_find_node_by_ref(fdt, fdt_node, "gpio");
 	if(node < 0) {
-		dbg_printk("pmw3360: nogpio!\n");
+		dbg_printk("adns3080: nogpio!\n");
 		return -EINVAL;
 	}
 
     gpio_device_t gpio = gpio_find_by_node(fdt, node);
     if(!gpio) {
-		dbg_printk("pmw3360: nogpiodev!\n");
+		dbg_printk("adns3080: nogpiodev!\n");
 		return -EINVAL;
 	}
 
-	struct pmw3360 *self = kzmalloc(sizeof(struct pmw3360));
+	struct adns3080 *self = kzmalloc(sizeof(struct adns3080));
     pointer_device_init(&self->dev, fdt_node, &_pointer_ops);
 	self->spi = spi;
     self->gpio = gpio;
     pointer_device_register(&self->dev);
 
-	_pmw3360_end(self); // ensure that the serial port is reset
-	_pmw3360_begin(self); // ensure that the serial port is reset
-	_pmw3360_end(self); // ensure that the serial port is reset
-	_pmw3360_write_reg(self, PMW3360_POWER_UP_RESET, 0x5a); // force reset
+	_adns3080_end(self); // ensure that the serial port is reset
+	_adns3080_begin(self); // ensure that the serial port is reset
+	_adns3080_end(self); // ensure that the serial port is reset
+	//_adns3080_write_reg(self, ADNS3080_POWER_UP_RESET, 0x5a); // force reset
 
 	thread_sleep_ms(50); // wait for it to reboot
 
 	// read registers 0x02 to 0x06 (and discard the data)
 	uint8_t dummy;
-	_pmw3360_read_reg(self, PMW3360_MOTION, &dummy);
-	_pmw3360_read_reg(self, PMW3360_DELTA_X_L, &dummy);
-	_pmw3360_read_reg(self, PMW3360_DELTA_X_H, &dummy);
-	_pmw3360_read_reg(self, PMW3360_DELTA_Y_L, &dummy);
-	_pmw3360_read_reg(self, PMW3360_DELTA_Y_H, &dummy);
+	_adns3080_read_reg(self, ADNS3080_MOTION, &dummy);
+	_adns3080_read_reg(self, ADNS3080_DELTA_X, &dummy);
+	_adns3080_read_reg(self, ADNS3080_DELTA_Y, &dummy);
 
-	dbg_printk("pmw3360: upld %d bytes\n", sizeof(_pmw3360_fw));
 	// upload the firmware
-	if(_pmw3360_upload_firmware(self) < 0){
-		dbg_printk("pmw3360: fwfail\n");
+/*
+	dbg_printk("adns3080: upld %d bytes\n", sizeof(_adns3080_fw));
+	if(_adns3080_upload_firmware(self) < 0){
+		dbg_printk("adns3080: fwfail\n");
 		//return -1;
 	}
-
+*/
 	thread_sleep_ms(10);
 
-	uint8_t reg[4] = {PMW3360_PRODUCT_ID, PMW3360_REVISION_ID, PMW3360_INVERSE_PRODUCT_ID, PMW3360_SROM_ID};
-	uint8_t data[4] = {0, 0, 0, 0};
-	for(int c = 0; c < 4; c++)
-		_pmw3360_read_reg(self, reg[c], &data[c]);
-	dbg_printk("pmw3360: ProdID:%02x, RevID:%02x, InvPID:%02x, SROM:%02x\n", data[0], data[1], data[2], data[3]);
+	uint8_t ch;
+	_adns3080_read_reg(self, ADNS3080_PRODUCT_ID, &ch);
+	if(ch != 0x17){
+		dbg_printk("adns3080: invalid product id %02x (expected 0x17)\n", ch);
+		return -1;
+	}
+
+	//_adns3080_read_reg(self, ADNS3080_CONFIGURATION_BITS, &ch);
+	//_adns3080_write_reg(self, ADNS3080_CONFIGURATION_BITS, ch | 0x10); // set full resolution mode
+
+	uint8_t reg[5] = {ADNS3080_PRODUCT_ID, ADNS3080_REVISION_ID, ADNS3080_INVERSE_PRODUCT_ID, ADNS3080_SROM_ID, ADNS3080_CONFIGURATION_BITS};
+	const char *name[5] = { "ProdID", "RevID", "InvProdID", "SROMID", "Conf"};
+	dbg_printk("adns3080: ");
+	for(size_t c = 0; c < sizeof(reg); c++){
+		_adns3080_read_reg(self, reg[c], &ch);
+		dbg_printk("%s%s = %02x", (c > 0)?", ":"", name[c], ch);
+	}
+	dbg_printk("\n");
 
     return 0;
 }
 
-int _pmw3360_remove(void *fdt, int fdt_node){
+int _adns3080_remove(void *fdt, int fdt_node){
 	return 0;
 }
 
-DEVICE_DRIVER(pmw3360, "pix,pmw3360", _pmw3360_probe, _pmw3360_remove)
+DEVICE_DRIVER(adns3080, "pix,adns3080", _adns3080_probe, _adns3080_remove)

@@ -4,7 +4,9 @@ libdriver_a_SOURCES=\
     baro/bmp280.c\
     disp/ili9340.c\
     disp/ledpanel.c\
-    pointer/pmw3360.c
+    pointer/pmw3360.c\
+    pointer/adns3080.c\
+    usb/usbd_cdc.c
 libdriver_a_LIBADD=
 
 other_sources =\
@@ -39,5 +41,5 @@ other_sources =\
     sensors/dht.c\
     temperature/ds18b20.c\
     tty/vt100.c\
-    waterflow/fs300a.c
+    waterflow/fs300a.c 
 AUTOMAKE_OPTIONS = subdir-objects
