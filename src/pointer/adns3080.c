@@ -69,6 +69,7 @@ struct adns3080 {
 	struct pointer_device dev;
 	spi_device_t spi;
 	gpio_device_t gpio;
+	uint32_t cs_pin;
 	uint8_t srom_id;
 };
 
@@ -363,25 +364,25 @@ int _adns3080_read(struct adns3080 *self, uint8_t *data){
 }
 
 void _adns3080_begin(struct adns3080 *self){
-    gpio_reset(self->gpio, 0);
+    gpio_reset(self->gpio, self->cs_pin);
 }
 
 void _adns3080_end(struct adns3080 *self){
 	thread_sleep_us(20);
-    gpio_set(self->gpio, 0);
+    gpio_set(self->gpio, self->cs_pin);
 	thread_sleep_us(100);
 }
 
 int _adns3080_read_reg(struct adns3080 *self, uint8_t reg, uint8_t *data){
 	int ret = 0;
-    gpio_reset(self->gpio, 0);
+    gpio_reset(self->gpio, self->cs_pin);
 
 	ret |= _adns3080_write(self, reg & 0x7f);
 	thread_sleep_us(100);
 	ret |= _adns3080_read(self, data);
 	thread_sleep_us(1);
 
-    gpio_set(self->gpio, 0);
+    gpio_set(self->gpio, self->cs_pin);
 	if(ret) return -1;
 	return 0;
 }
@@ -546,11 +547,13 @@ int _adns3080_probe(void *fdt, int fdt_node){
 		dbg_printk("adns3080: nogpiodev!\n");
 		return -EINVAL;
 	}
+	uint32_t cs_pin = (uint32_t)fdt_get_int_or_default(fdt, (int)fdt_node, "cs", 0);
 
 	struct adns3080 *self = kzmalloc(sizeof(struct adns3080));
     pointer_device_init(&self->dev, fdt_node, &_pointer_ops);
 	self->spi = spi;
     self->gpio = gpio;
+	self->cs_pin = cs_pin;
     pointer_device_register(&self->dev);
 
 	_adns3080_end(self); // ensure that the serial port is reset
