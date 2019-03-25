@@ -140,7 +140,8 @@ am__dirstamp = $(am__leading_dot)dirstamp
 am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
 	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
 	disp/ledpanel.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
-	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT)
+	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
+	tty/console.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -342,7 +343,8 @@ libdriver_a_SOURCES = \
     disp/ledpanel.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
-    usb/usbd_cdc.c
+    usb/usbd_cdc.c\
+	tty/console.c
 
 libdriver_a_LIBADD = 
 other_sources = \
@@ -488,6 +490,14 @@ usb/$(DEPDIR)/$(am__dirstamp):
 	@: > usb/$(DEPDIR)/$(am__dirstamp)
 usb/usbd_cdc.$(OBJEXT): usb/$(am__dirstamp) \
 	usb/$(DEPDIR)/$(am__dirstamp)
+tty/$(am__dirstamp):
+	@$(MKDIR_P) tty
+	@: > tty/$(am__dirstamp)
+tty/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) tty/$(DEPDIR)
+	@: > tty/$(DEPDIR)/$(am__dirstamp)
+tty/console.$(OBJEXT): tty/$(am__dirstamp) \
+	tty/$(DEPDIR)/$(am__dirstamp)
 
 libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdriver_a_DEPENDENCIES) 
 	$(AM_V_at)-rm -f libdriver.a
@@ -500,6 +510,7 @@ mostlyclean-compile:
 	-rm -f baro/*.$(OBJEXT)
 	-rm -f disp/*.$(OBJEXT)
 	-rm -f pointer/*.$(OBJEXT)
+	-rm -f tty/*.$(OBJEXT)
 	-rm -f usb/*.$(OBJEXT)
 
 distclean-compile:
@@ -511,6 +522,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/adns3080.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/pmw3360.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@usb/$(DEPDIR)/usbd_cdc.Po@am__quote@
 
 .c.o:
@@ -666,6 +678,8 @@ distclean-generic:
 	-rm -f disp/$(am__dirstamp)
 	-rm -f pointer/$(DEPDIR)/$(am__dirstamp)
 	-rm -f pointer/$(am__dirstamp)
+	-rm -f tty/$(DEPDIR)/$(am__dirstamp)
+	-rm -f tty/$(am__dirstamp)
 	-rm -f usb/$(DEPDIR)/$(am__dirstamp)
 	-rm -f usb/$(am__dirstamp)
 
@@ -678,7 +692,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -724,7 +738,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

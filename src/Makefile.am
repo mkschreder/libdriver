@@ -6,7 +6,8 @@ libdriver_a_SOURCES=\
     disp/ledpanel.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
-    usb/usbd_cdc.c
+    usb/usbd_cdc.c\
+	tty/console.c
 libdriver_a_LIBADD=
 
 other_sources =\
