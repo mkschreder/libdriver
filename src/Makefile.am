@@ -4,6 +4,8 @@ libdriver_a_SOURCES=\
     baro/bmp280.c\
     disp/ili9340.c\
     disp/ledpanel.c\
+	gpio/mcp2317.c\
+	hbridge/drv8302.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
     usb/usbd_cdc.c\

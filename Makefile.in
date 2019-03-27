@@ -366,7 +366,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 pkgconfig_DATA = libdriver.pc
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src
+SUBDIRS = include src
 EXTRA_DIST = autogen.mk
 AUTOMAKE_OPTIONS = subdir-objects
 all: all-recursive

@@ -13097,7 +13097,7 @@ $as_echo "$as_me: pkgconfig directory is ${pkgconfigdir}" >&6;}
 ac_config_files="$ac_config_files libdriver.pc"
 
 
-ac_config_files="$ac_config_files Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile include/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -14136,6 +14136,7 @@ do
     "libdriver.pc") CONFIG_FILES="$CONFIG_FILES libdriver.pc" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "include/Makefile") CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

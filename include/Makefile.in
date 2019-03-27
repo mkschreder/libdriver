@@ -88,7 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
+subdir = include
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -96,10 +96,30 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_code_coverage.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
+DIST_COMMON = $(srcdir)/Makefile.am $(nobase_pkginclude_HEADERS) \
+	$(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
+AM_V_P = $(am__v_P_@AM_V@)
+am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
+am__v_P_0 = false
+am__v_P_1 = :
+AM_V_GEN = $(am__v_GEN_@AM_V@)
+am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
+am__v_GEN_0 = @echo "  GEN     " $@;
+am__v_GEN_1 = 
+AM_V_at = $(am__v_at_@AM_V@)
+am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+am__v_at_0 = @
+am__v_at_1 = 
+SOURCES =
+DIST_SOURCES =
+am__can_run_installinfo = \
+  case $$AM_UPDATE_INFO_DIR in \
+    n|no|NO) false;; \
+    *) (install-info --version) >/dev/null 2>&1;; \
+  esac
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -127,68 +147,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)"
-LIBRARIES = $(lib_LIBRARIES)
-ARFLAGS = cru
-AM_V_AR = $(am__v_AR_@AM_V@)
-am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
-am__v_AR_0 = @echo "  AR      " $@;
-am__v_AR_1 = 
-libdriver_a_AR = $(AR) $(ARFLAGS)
-libdriver_a_DEPENDENCIES =
-am__dirstamp = $(am__leading_dot)dirstamp
-am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
-	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
-	disp/ledpanel.$(OBJEXT) gpio/mcp2317.$(OBJEXT) \
-	hbridge/drv8302.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
-	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
-	tty/console.$(OBJEXT)
-libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
-AM_V_P = $(am__v_P_@AM_V@)
-am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
-am__v_P_0 = false
-am__v_P_1 = :
-AM_V_GEN = $(am__v_GEN_@AM_V@)
-am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
-am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
-AM_V_at = $(am__v_at_@AM_V@)
-am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
-am__v_at_0 = @
-am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@
-depcomp = $(SHELL) $(top_srcdir)/config/depcomp
-am__depfiles_maybe = depfiles
-am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
-LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_@AM_V@)
-am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
-am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
-CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_@AM_V@)
-am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
-am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
-SOURCES = $(libdriver_a_SOURCES)
-DIST_SOURCES = $(libdriver_a_SOURCES)
-am__can_run_installinfo = \
-  case $$AM_UPDATE_INFO_DIR in \
-    n|no|NO) false;; \
-    *) (install-info --version) >/dev/null 2>&1;; \
-  esac
+am__installdirs = "$(DESTDIR)$(pkgincludedir)"
+HEADERS = $(nobase_pkginclude_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -208,7 +168,7 @@ am__define_uniq_tagged_files = \
   done | $(am__uniquify_input)`
 ETAGS = etags
 CTAGS = ctags
-am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/config/depcomp
+am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -336,59 +296,12 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-lib_LIBRARIES = libdriver.a
-libdriver_a_SOURCES = \
-    accgyro/mpu6500.c\
-    baro/bmp280.c\
-    disp/ili9340.c\
-    disp/ledpanel.c\
-	gpio/mcp2317.c\
-	hbridge/drv8302.c\
-    pointer/pmw3360.c\
-    pointer/adns3080.c\
-    usb/usbd_cdc.c\
-	tty/console.c
+nobase_pkginclude_HEADERS = \
+	dts/mcp2317.h
 
-libdriver_a_LIBADD = 
-other_sources = \
-    accgyro/adxl345.c\
-    accgyro/l3g4200d.c\
-    accgyro/mma7455.c\
-    accgyro/mpu6000.c\
-    accgyro/mpu6050.c\
-    accgyro/mpu6050dmp6.c\
-    baro/bmp085.c\
-    block/at24.c\
-    block/serial_flash.c\
-    compass/hmc5883l.c\
-    current/acs712.c\
-    disp/ascii_display.c\
-    disp/ili9340.c\
-    disp/ks0713.c\
-    disp/lcd.c\
-    disp/lcd7seg.c\
-    disp/ledmatrix88.c\
-    disp/ssd1306.c\
-    io/l74hc165.c\
-    io/l74hc4051.c\
-    io/l74hc595.c\
-    io/pcf8574.c\
-    net/enc28j60.c\
-    radio/nrf24l01.c\
-    range/hcsr04.c\
-    rfid/mfrc522.c\
-    sensors/amt1001.c\
-    sensors/bh1750.c\
-    sensors/dht.c\
-    temperature/ds18b20.c\
-    tty/vt100.c\
-    waterflow/fs300a.c 
-
-AUTOMAKE_OPTIONS = subdir-objects
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -398,9 +311,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu include/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --gnu include/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -418,165 +331,36 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-libLIBRARIES: $(lib_LIBRARIES)
-	@$(NORMAL_INSTALL)
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
-	list2=; for p in $$list; do \
-	  if test -f $$p; then \
-	    list2="$$list2 $$p"; \
-	  else :; fi; \
-	done; \
-	test -z "$$list2" || { \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
-	  echo " $(INSTALL_DATA) $$list2 '$(DESTDIR)$(libdir)'"; \
-	  $(INSTALL_DATA) $$list2 "$(DESTDIR)$(libdir)" || exit $$?; }
-	@$(POST_INSTALL)
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
-	for p in $$list; do \
-	  if test -f $$p; then \
-	    $(am__strip_dir) \
-	    echo " ( cd '$(DESTDIR)$(libdir)' && $(RANLIB) $$f )"; \
-	    ( cd "$(DESTDIR)$(libdir)" && $(RANLIB) $$f ) || exit $$?; \
-	  else :; fi; \
-	done
-
-uninstall-libLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LIBRARIES)'; test -n "$(libdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(libdir)'; $(am__uninstall_files_from_dir)
-
-clean-libLIBRARIES:
-	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-accgyro/$(am__dirstamp):
-	@$(MKDIR_P) accgyro
-	@: > accgyro/$(am__dirstamp)
-accgyro/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) accgyro/$(DEPDIR)
-	@: > accgyro/$(DEPDIR)/$(am__dirstamp)
-accgyro/mpu6500.$(OBJEXT): accgyro/$(am__dirstamp) \
-	accgyro/$(DEPDIR)/$(am__dirstamp)
-baro/$(am__dirstamp):
-	@$(MKDIR_P) baro
-	@: > baro/$(am__dirstamp)
-baro/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) baro/$(DEPDIR)
-	@: > baro/$(DEPDIR)/$(am__dirstamp)
-baro/bmp280.$(OBJEXT): baro/$(am__dirstamp) \
-	baro/$(DEPDIR)/$(am__dirstamp)
-disp/$(am__dirstamp):
-	@$(MKDIR_P) disp
-	@: > disp/$(am__dirstamp)
-disp/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) disp/$(DEPDIR)
-	@: > disp/$(DEPDIR)/$(am__dirstamp)
-disp/ili9340.$(OBJEXT): disp/$(am__dirstamp) \
-	disp/$(DEPDIR)/$(am__dirstamp)
-disp/ledpanel.$(OBJEXT): disp/$(am__dirstamp) \
-	disp/$(DEPDIR)/$(am__dirstamp)
-gpio/$(am__dirstamp):
-	@$(MKDIR_P) gpio
-	@: > gpio/$(am__dirstamp)
-gpio/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) gpio/$(DEPDIR)
-	@: > gpio/$(DEPDIR)/$(am__dirstamp)
-gpio/mcp2317.$(OBJEXT): gpio/$(am__dirstamp) \
-	gpio/$(DEPDIR)/$(am__dirstamp)
-hbridge/$(am__dirstamp):
-	@$(MKDIR_P) hbridge
-	@: > hbridge/$(am__dirstamp)
-hbridge/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) hbridge/$(DEPDIR)
-	@: > hbridge/$(DEPDIR)/$(am__dirstamp)
-hbridge/drv8302.$(OBJEXT): hbridge/$(am__dirstamp) \
-	hbridge/$(DEPDIR)/$(am__dirstamp)
-pointer/$(am__dirstamp):
-	@$(MKDIR_P) pointer
-	@: > pointer/$(am__dirstamp)
-pointer/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) pointer/$(DEPDIR)
-	@: > pointer/$(DEPDIR)/$(am__dirstamp)
-pointer/pmw3360.$(OBJEXT): pointer/$(am__dirstamp) \
-	pointer/$(DEPDIR)/$(am__dirstamp)
-pointer/adns3080.$(OBJEXT): pointer/$(am__dirstamp) \
-	pointer/$(DEPDIR)/$(am__dirstamp)
-usb/$(am__dirstamp):
-	@$(MKDIR_P) usb
-	@: > usb/$(am__dirstamp)
-usb/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) usb/$(DEPDIR)
-	@: > usb/$(DEPDIR)/$(am__dirstamp)
-usb/usbd_cdc.$(OBJEXT): usb/$(am__dirstamp) \
-	usb/$(DEPDIR)/$(am__dirstamp)
-tty/$(am__dirstamp):
-	@$(MKDIR_P) tty
-	@: > tty/$(am__dirstamp)
-tty/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) tty/$(DEPDIR)
-	@: > tty/$(DEPDIR)/$(am__dirstamp)
-tty/console.$(OBJEXT): tty/$(am__dirstamp) \
-	tty/$(DEPDIR)/$(am__dirstamp)
-
-libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdriver_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libdriver.a
-	$(AM_V_AR)$(libdriver_a_AR) libdriver.a $(libdriver_a_OBJECTS) $(libdriver_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libdriver.a
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT)
-	-rm -f accgyro/*.$(OBJEXT)
-	-rm -f baro/*.$(OBJEXT)
-	-rm -f disp/*.$(OBJEXT)
-	-rm -f gpio/*.$(OBJEXT)
-	-rm -f hbridge/*.$(OBJEXT)
-	-rm -f pointer/*.$(OBJEXT)
-	-rm -f tty/*.$(OBJEXT)
-	-rm -f usb/*.$(OBJEXT)
-
-distclean-compile:
-	-rm -f *.tab.c
-
-@AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/mcp2317.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@hbridge/$(DEPDIR)/drv8302.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/adns3080.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/pmw3360.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/console.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@usb/$(DEPDIR)/usbd_cdc.Po@am__quote@
-
-.c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
-@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
-@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
-.c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
-@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
-@am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 mostlyclean-libtool:
 	-rm -f *.lo
 
 clean-libtool:
 	-rm -rf .libs _libs
+install-nobase_pkgincludeHEADERS: $(nobase_pkginclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgincludedir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)" || exit 1; \
+	fi; \
+	$(am__nobase_list) | while read dir files; do \
+	  xfiles=; for file in $$files; do \
+	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
+	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
+	  test -z "$$xfiles" || { \
+	    test "x$$dir" = x. || { \
+	      echo " $(MKDIR_P) '$(DESTDIR)$(pkgincludedir)/$$dir'"; \
+	      $(MKDIR_P) "$(DESTDIR)$(pkgincludedir)/$$dir"; }; \
+	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(pkgincludedir)/$$dir'"; \
+	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(pkgincludedir)/$$dir" || exit $$?; }; \
+	done
+
+uninstall-nobase_pkgincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nobase_pkginclude_HEADERS)'; test -n "$(pkgincludedir)" || list=; \
+	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
+	dir='$(DESTDIR)$(pkgincludedir)'; $(am__uninstall_files_from_dir)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -662,9 +446,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
+	for dir in "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -693,36 +477,17 @@ clean-generic:
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
-	-rm -f accgyro/$(DEPDIR)/$(am__dirstamp)
-	-rm -f accgyro/$(am__dirstamp)
-	-rm -f baro/$(DEPDIR)/$(am__dirstamp)
-	-rm -f baro/$(am__dirstamp)
-	-rm -f disp/$(DEPDIR)/$(am__dirstamp)
-	-rm -f disp/$(am__dirstamp)
-	-rm -f gpio/$(DEPDIR)/$(am__dirstamp)
-	-rm -f gpio/$(am__dirstamp)
-	-rm -f hbridge/$(DEPDIR)/$(am__dirstamp)
-	-rm -f hbridge/$(am__dirstamp)
-	-rm -f pointer/$(DEPDIR)/$(am__dirstamp)
-	-rm -f pointer/$(am__dirstamp)
-	-rm -f tty/$(DEPDIR)/$(am__dirstamp)
-	-rm -f tty/$(am__dirstamp)
-	-rm -f usb/$(DEPDIR)/$(am__dirstamp)
-	-rm -f usb/$(am__dirstamp)
 
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES clean-libtool \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-tags
+distclean-am: clean-am distclean-generic distclean-tags
 
 dvi: dvi-am
 
@@ -736,13 +501,13 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-nobase_pkgincludeHEADERS
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-libLIBRARIES
+install-exec-am:
 
 install-html: install-html-am
 
@@ -765,14 +530,12 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-am
 
@@ -782,23 +545,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-libLIBRARIES
+uninstall-am: uninstall-nobase_pkgincludeHEADERS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libLIBRARIES clean-libtool cscopelist-am ctags ctags-am \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-libLIBRARIES install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-am uninstall uninstall-am uninstall-libLIBRARIES
+	clean-libtool cscopelist-am ctags ctags-am distclean \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man \
+	install-nobase_pkgincludeHEADERS install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
+	uninstall-am uninstall-nobase_pkgincludeHEADERS
 
 .PRECIOUS: Makefile
 

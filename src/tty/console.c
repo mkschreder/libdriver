@@ -86,25 +86,17 @@ static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
 	return tok;
 }
 
-void con_printf(struct console *self, const char *fmt, ...){
-	if(!self->serial) return;
+static int _console_printf(console_t dev, const char *fmt, ...){
+	struct console *self = container_of(dev, struct console, dev.ops);
 
 	va_list argptr;
 	va_start(argptr, fmt);
-	vsnprintf(self->printf_buffer, sizeof(self->printf_buffer), fmt, argptr);
+	int r = vsnprintf(self->printf_buffer, sizeof(self->printf_buffer), fmt, argptr);
 	va_end(argptr);
 	size_t len = strlen(self->printf_buffer);
-	serial_write(self->serial, self->printf_buffer, len, CONSOLE_WRITE_TIMEOUT);
-	/**
-	// TODO: this is a rather stupid way to avoid specifying imap and omap in picocom
-	for(size_t size = 0; size < len; size++){
-		const char cr = '\r';
-		if(self->printf_buffer[size] == '\n'){
-			serial_write(self->serial, &cr, 1, CONSOLE_WRITE_TIMEOUT);
-		}
-		serial_write(self->serial, &self->printf_buffer[size], 1, CONSOLE_WRITE_TIMEOUT);
-	}
-	*/
+	int rr = serial_write(self->serial, self->printf_buffer, len, CONSOLE_WRITE_TIMEOUT);
+	if(rr < 0) return rr;
+	return r;
 }
 
 #if !defined(__linux__)
@@ -180,25 +172,8 @@ static int _cmd_ps(struct console *self, int argc, char **argv){
 	return 0;
 }
 
-static int _cmd_reboot(struct console *self, int argc, char **argv){
-	(void)self;
-	(void)argc;
-	(void)argv;
-
-	if(argc == 2 && strcmp(argv[1], "b") == 0){
-		con_printf(self, "Rebooting to bootloader..\n");
-		thread_sleep_ms(100);
-		chip_reset_to_bootloader();
-	} else if(argc == 1){
-		chip_reset();
-	} else {
-		con_printf(self, "invalid argument!\n");
-	}
-
-	return 0;
-}
-
 static int _cmd_set(struct console *con, int argc, char **argv){
+	#if 0
 	static char str[32];
 	if (argc == 1) {
 		struct vardir_entry *entry;
@@ -245,25 +220,26 @@ static int _cmd_save(struct console *self, int argc, char **argv){
 		return -1;
 	}
 	*/
+#endif
+#endif
 	return 0;
 }
-#endif
 
 static int _cmd_help(struct console *self, int argc, char **argv){
 	(void)argc; (void)argv;
 	struct console_command *cmd;
 	list_for_each_entry(cmd, &self->commands, list){
-		con_printf(self, "%s", cmd->name);
-		if(cmd->options) con_printf(self, " %s", cmd->options);
-		con_printf(self, "\n");
-		if(cmd->description) con_printf(self, "\t%s\n", cmd->description);
+		_console_printf(&self->dev.ops, "%s", cmd->name);
+		if(cmd->options) _console_printf(&self->dev.ops, " %s", cmd->options);
+		_console_printf(&self->dev.ops, "\n");
+		if(cmd->description) _console_printf(&self->dev.ops, "\t%s\n", cmd->description);
 	}
 #if CONFIG_CMD_PS == 1
-	con_printf(self, "ps\n");
-	con_printf(self, "\tshow running tasks\n");
+	_console_printf(&self->dev.ops, "ps\n");
+	_console_printf(&self->dev.ops, "\tshow running tasks\n");
 #endif
-	con_printf(self, "help\n");
-	con_printf(self, "\tshow this help\n");
+	_console_printf(&self->dev.ops, "help\n");
+	_console_printf(&self->dev.ops, "\tshow this help\n");
 	return 0;
 }
 
@@ -305,14 +281,14 @@ static void _console_task(void *ptr){
 	struct console *self = (struct console*)ptr;
 
 	while(1){
-		con_printf(self, "# ");
+		_console_printf(&self->dev.ops, "# ");
 		int rd = 0;
 		memset(self->line, 0, sizeof(self->line));
 
 		rd = con_readline(self, self->line, sizeof(self->line));
 
 		if(rd < 0) {
-			con_printf(self, "Internal error (%d): %s\n", rd, strerror(-rd));
+			_console_printf(&self->dev.ops, "Internal error (%d): %s\n", rd, strerror(-rd));
             thread_sleep_ms(100); // to avoid busy loop
 			continue;
 		}
@@ -335,8 +311,8 @@ static void _console_task(void *ptr){
 		struct console_command *cmd;
 		list_for_each_entry(cmd, &self->commands, list){
 			if(strcmp(cmd->name, self->argv[0]) == 0 && cmd->proc){
-				if(cmd->proc(&self->dev.ops, argc, self->argv) < 0){
-					con_printf(self, "Invalid arguments to command\n");
+				if(cmd->proc(&self->dev.ops, cmd->userptr, argc, self->argv) < 0){
+					_console_printf(&self->dev.ops, "Invalid arguments to command\n");
 				}
 				handled = 1;
 				break;
@@ -346,9 +322,6 @@ static void _console_task(void *ptr){
 			if(0) {}
 			else if(strcmp("ps", self->argv[0]) == 0){
 				_cmd_ps(self, argc, self->argv);
-			}
-			else if(strcmp("reboot", self->argv[0]) == 0){
-				_cmd_reboot(self, argc, self->argv);
 			}
 			else if(strcmp("set", self->argv[0]) == 0){
 				_cmd_set(self, argc, self->argv);
@@ -366,7 +339,7 @@ static void _console_task(void *ptr){
 			}
 		}
         // send end of transmission
-		con_printf(self, "\x04");
+		_console_printf(&self->dev.ops, "\x04");
 	}
 }
 
@@ -377,7 +350,8 @@ static int _console_add_command(console_t dev, struct console_command *cmd){
 }
 
 static const struct console_ops _console_ops = {
-	.add_command = _console_add_command
+	.add_command = _console_add_command,
+	.printf = _console_printf
 };
 
 int _console_probe(void *fdt, int fdt_node){
