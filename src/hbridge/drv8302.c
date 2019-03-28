@@ -28,6 +28,8 @@
 #include <libfirmware/gpio.h>
 #include <libfirmware/console.h>
 #include <libfirmware/mutex.h>
+#include <libfirmware/analog.h>
+#include <libfirmware/math.h>
 
 #include <libfdt/libfdt.h>
 
@@ -40,18 +42,52 @@
 
 struct drv8302 {
 	gpio_device_t gpio;
+	analog_device_t pwm;
 };
+
+static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
+	struct drv8302 *self = (struct drv8302*)userptr;
+	if(argc == 5 && strcmp(argv[1], "out") == 0){
+		float va = constrain_float((float)atof(argv[2]), 0.0f, 1.0f);
+		float vb = constrain_float((float)atof(argv[3]), 0.0f, 1.0f);
+		float vc = constrain_float((float)atof(argv[4]), 0.0f, 1.0f);
+
+		analog_write(self->pwm, 0, va);
+		analog_write(self->pwm, 1, vb);
+		analog_write(self->pwm, 2, vc);
+	} else {
+		if(argc > 1){
+			console_printf(con, "Unknown action %s\n", argv[2]);
+		}
+	}
+	return 0;
+}
 
 int _drv8302_probe(void *fdt, int fdt_node){
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
+	analog_device_t pwm = analog_find_by_ref(fdt, fdt_node, "pwm");
 
 	if(!gpio){
 		printk("drv8302: gpio invalid\n");
 		return -1;
 	}
 
+	if(!pwm){
+		printk("drv8302: pwm invalid\n");
+		return -1;
+	}
+
 	struct drv8302 *self = kzmalloc(sizeof(struct drv8302));
 	self->gpio = gpio;
+	self->pwm = pwm;
+
+	console_t console = console_find_by_ref(fdt, fdt_node, "console");
+	if(console){
+		char name[32];
+		static int instances = 0;
+		snprintf(name, sizeof(name), "drv8302_%d", instances++);
+		console_add_command(console, self, name, "drv8302 utilities", "", _drv8302_cmd);
+	}
 
 	gpio_set(self->gpio, PIN_EN_GATE);
 

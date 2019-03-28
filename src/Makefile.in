@@ -138,11 +138,11 @@ libdriver_a_AR = $(AR) $(ARFLAGS)
 libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
-	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
-	disp/ledpanel.$(OBJEXT) gpio/mcp2317.$(OBJEXT) \
-	hbridge/drv8302.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
-	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
-	tty/console.$(OBJEXT)
+	analog/mcp4461.$(OBJEXT) baro/bmp280.$(OBJEXT) \
+	disp/ili9340.$(OBJEXT) disp/ledpanel.$(OBJEXT) \
+	gpio/mcp2317.$(OBJEXT) hbridge/drv8302.$(OBJEXT) \
+	pointer/pmw3360.$(OBJEXT) pointer/adns3080.$(OBJEXT) \
+	usb/usbd_cdc.$(OBJEXT) tty/console.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -339,6 +339,7 @@ top_srcdir = @top_srcdir@
 lib_LIBRARIES = libdriver.a
 libdriver_a_SOURCES = \
     accgyro/mpu6500.c\
+	analog/mcp4461.c\
     baro/bmp280.c\
     disp/ili9340.c\
     disp/ledpanel.c\
@@ -457,6 +458,14 @@ accgyro/$(DEPDIR)/$(am__dirstamp):
 	@: > accgyro/$(DEPDIR)/$(am__dirstamp)
 accgyro/mpu6500.$(OBJEXT): accgyro/$(am__dirstamp) \
 	accgyro/$(DEPDIR)/$(am__dirstamp)
+analog/$(am__dirstamp):
+	@$(MKDIR_P) analog
+	@: > analog/$(am__dirstamp)
+analog/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) analog/$(DEPDIR)
+	@: > analog/$(DEPDIR)/$(am__dirstamp)
+analog/mcp4461.$(OBJEXT): analog/$(am__dirstamp) \
+	analog/$(DEPDIR)/$(am__dirstamp)
 baro/$(am__dirstamp):
 	@$(MKDIR_P) baro
 	@: > baro/$(am__dirstamp)
@@ -526,6 +535,7 @@ libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdrive
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f accgyro/*.$(OBJEXT)
+	-rm -f analog/*.$(OBJEXT)
 	-rm -f baro/*.$(OBJEXT)
 	-rm -f disp/*.$(OBJEXT)
 	-rm -f gpio/*.$(OBJEXT)
@@ -538,6 +548,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/mcp4461.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
@@ -695,6 +706,8 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f accgyro/$(DEPDIR)/$(am__dirstamp)
 	-rm -f accgyro/$(am__dirstamp)
+	-rm -f analog/$(DEPDIR)/$(am__dirstamp)
+	-rm -f analog/$(am__dirstamp)
 	-rm -f baro/$(DEPDIR)/$(am__dirstamp)
 	-rm -f baro/$(am__dirstamp)
 	-rm -f disp/$(DEPDIR)/$(am__dirstamp)
@@ -719,7 +732,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -765,7 +778,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
