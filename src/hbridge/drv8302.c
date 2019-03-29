@@ -30,6 +30,7 @@
 #include <libfirmware/mutex.h>
 #include <libfirmware/analog.h>
 #include <libfirmware/math.h>
+#include <libfirmware/adc.h>
 
 #include <libfdt/libfdt.h>
 
@@ -43,6 +44,7 @@
 struct drv8302 {
 	gpio_device_t gpio;
 	analog_device_t pwm;
+	adc_device_t adc;
 };
 
 static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
@@ -55,6 +57,21 @@ static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
 		analog_write(self->pwm, 0, va);
 		analog_write(self->pwm, 1, vb);
 		analog_write(self->pwm, 2, vc);
+	} else if(argc == 2 && strcmp(argv[1], "adc") == 0) {
+		if(!self->adc){
+			console_printf(con, "drv8302: adc not available\n");
+			return -1;
+		}
+		for(int j = 0; j < 100; j++){
+			adc_trigger(self->adc);
+			thread_sleep_ms(200);
+			for(unsigned int c = 0; c < 16; c++){
+				int16_t val = 0;
+				adc_read(self->adc, c, &val);
+				console_printf(con, "%05d ", val);
+			}
+			console_printf(con, "\r");
+		}
 	} else {
 		if(argc > 1){
 			console_printf(con, "Unknown action %s\n", argv[2]);
@@ -66,6 +83,7 @@ static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
 int _drv8302_probe(void *fdt, int fdt_node){
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
 	analog_device_t pwm = analog_find_by_ref(fdt, fdt_node, "pwm");
+	adc_device_t adc = adc_find_by_ref(fdt, fdt_node, "adc");
 
 	if(!gpio){
 		printk("drv8302: gpio invalid\n");
@@ -77,9 +95,15 @@ int _drv8302_probe(void *fdt, int fdt_node){
 		return -1;
 	}
 
+	if(!pwm){
+		printk("drv8302: adc invalid\n");
+		return -1;
+	}
+
 	struct drv8302 *self = kzmalloc(sizeof(struct drv8302));
 	self->gpio = gpio;
 	self->pwm = pwm;
+	self->adc = adc;
 
 	console_t console = console_find_by_ref(fdt, fdt_node, "console");
 	if(console){

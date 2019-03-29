@@ -49,7 +49,7 @@
 
 static int _mcp4461_probe(void *fdt, int fdt_node){
 	i2c_device_t i2c = i2c_find_by_ref(fdt, fdt_node, "i2c");
-	uint8_t addr = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "reg", 0);
+	uint8_t addr = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "reg", 0x2d);
 	uint8_t data[2];
 
 	if(!i2c){

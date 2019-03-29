@@ -1,6 +1,7 @@
 lib_LIBRARIES=libdriver.a
 libdriver_a_SOURCES=\
     accgyro/mpu6500.c\
+	analog/lp55231.c\
 	analog/mcp4461.c\
     baro/bmp280.c\
     disp/ili9340.c\

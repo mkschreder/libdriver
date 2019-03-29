@@ -138,11 +138,12 @@ libdriver_a_AR = $(AR) $(ARFLAGS)
 libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
-	analog/mcp4461.$(OBJEXT) baro/bmp280.$(OBJEXT) \
-	disp/ili9340.$(OBJEXT) disp/ledpanel.$(OBJEXT) \
-	gpio/mcp2317.$(OBJEXT) hbridge/drv8302.$(OBJEXT) \
-	pointer/pmw3360.$(OBJEXT) pointer/adns3080.$(OBJEXT) \
-	usb/usbd_cdc.$(OBJEXT) tty/console.$(OBJEXT)
+	analog/lp55231.$(OBJEXT) analog/mcp4461.$(OBJEXT) \
+	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
+	disp/ledpanel.$(OBJEXT) gpio/mcp2317.$(OBJEXT) \
+	hbridge/drv8302.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
+	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
+	tty/console.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -339,6 +340,7 @@ top_srcdir = @top_srcdir@
 lib_LIBRARIES = libdriver.a
 libdriver_a_SOURCES = \
     accgyro/mpu6500.c\
+	analog/lp55231.c\
 	analog/mcp4461.c\
     baro/bmp280.c\
     disp/ili9340.c\
@@ -464,6 +466,8 @@ analog/$(am__dirstamp):
 analog/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) analog/$(DEPDIR)
 	@: > analog/$(DEPDIR)/$(am__dirstamp)
+analog/lp55231.$(OBJEXT): analog/$(am__dirstamp) \
+	analog/$(DEPDIR)/$(am__dirstamp)
 analog/mcp4461.$(OBJEXT): analog/$(am__dirstamp) \
 	analog/$(DEPDIR)/$(am__dirstamp)
 baro/$(am__dirstamp):
@@ -548,6 +552,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/lp55231.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/mcp4461.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
