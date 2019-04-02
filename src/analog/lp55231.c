@@ -61,12 +61,12 @@ struct lp55231 {
 
 static int _lp55231_write_reg(struct lp55231 *self, uint8_t reg, uint8_t value){
 	uint8_t data[] = {value};
-	return i2c_write_buf(self->i2c, self->addr, reg, data, sizeof(data));
+	return i2c_write8_buf(self->i2c, self->addr, reg, data, sizeof(data));
 }
 
 static uint8_t _lp55231_read_reg(struct lp55231 *self, uint8_t reg){
 	uint8_t data[1] = {0};
-	i2c_read_buf(self->i2c, self->addr, reg, data, sizeof(data));
+	i2c_read8_buf(self->i2c, self->addr, reg, data, sizeof(data));
 	return data[0];
 }
 

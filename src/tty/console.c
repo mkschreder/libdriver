@@ -375,7 +375,7 @@ int _console_probe(void *fdt, int fdt_node){
 	if(thread_create(
 		  _console_task,
 		  "shell",
-		  460,
+		  520,
 		  self,
 		  1,
 		  NULL) < 0){

@@ -95,7 +95,7 @@ static int _serial_read(serial_port_t dev, void *data, size_t size, uint32_t tim
     return 0;
 }
 
-static const struct serial_ops _serial_ops = {
+static const struct serial_device_ops _serial_ops = {
 	.read = _serial_read,
 	.write = _serial_write
 };
@@ -116,9 +116,9 @@ static int _usb_cdc_probe(void *fdt, int fdt_node){
     struct usb_cdc *self = kzmalloc(sizeof(struct usb_cdc));
     self->usbd = usbd;
 
-	serial_device_init(&self->dev, fdt_node, &_serial_ops);
-
+	serial_device_init(&self->dev, fdt, fdt_node, &_serial_ops);
     serial_device_register(&self->dev);
+
     return 0;
 }
 

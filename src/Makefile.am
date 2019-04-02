@@ -7,7 +7,9 @@ libdriver_a_SOURCES=\
     disp/ili9340.c\
     disp/ledpanel.c\
 	gpio/mcp2317.c\
+	gpio/max14890.c\
 	hbridge/drv8302.c\
+	mem/at24.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
     usb/usbd_cdc.c\

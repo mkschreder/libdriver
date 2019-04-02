@@ -93,7 +93,7 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out){
 
 	// start measurement
     // set oversampling + power mode (forced), and start sampling
-    if(i2c_write_reg(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE) < 0){
+    if(i2c_write8_reg8(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE) < 0){
 		baro_debug("baro: errstart\n");
 		return -EIO;
 	}
@@ -104,7 +104,7 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out){
 
     // read data from sensor
     uint8_t data[BMP280_DATA_FRAME_SIZE];
-    if(i2c_read_buf(self->i2c, self->address, BMP280_PRESSURE_MSB_REG, data, BMP280_DATA_FRAME_SIZE) < 0){
+    if(i2c_read8_buf(self->i2c, self->address, BMP280_PRESSURE_MSB_REG, data, BMP280_DATA_FRAME_SIZE) < 0){
 		baro_debug("baro: noresult\n");
 		return -EIO;
 	}
@@ -167,7 +167,7 @@ int _bmp280_probe(void *fdt, int fdt_node){
 
     // try to identify the chip
     uint8_t chip_id = 0;
-    if(i2c_read_reg(i2c, address, BMP280_CHIP_ID_REG, &chip_id) != 1){
+    if(i2c_read8_reg8(i2c, address, BMP280_CHIP_ID_REG, &chip_id) != 1){
 		dbg_printk("bmp280: errio!\n");
         return -EIO;
     }
@@ -184,7 +184,7 @@ int _bmp280_probe(void *fdt, int fdt_node){
     self->address = address;
 
     // read calibration
-    i2c_read_buf(self->i2c, self->address, BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG, &self->cal_data, 24);
+    i2c_read8_buf(self->i2c, self->address, BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG, &self->cal_data, 24);
 
     // set oversampling + power mode (forced), and start sampling
     //i2c_write_reg(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE);

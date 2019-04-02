@@ -136,7 +136,7 @@ static int _mcp2317_cmd(console_t con, void *userptr, int argc, char **argv){
 	return 0;
 }
 
-int _mcp2317_probe(void *fdt, int fdt_node){
+static int _mcp2317_probe(void *fdt, int fdt_node){
 	spi_device_t spi = spi_find_by_ref(fdt, fdt_node, "spi");
 	if(!spi){
 		printk("mcp2317: spi error\n");
@@ -213,7 +213,7 @@ int _mcp2317_probe(void *fdt, int fdt_node){
 	return 1;
 }
 
-int _mcp2317_remove(void *fdt, int fdt_node){
+static int _mcp2317_remove(void *fdt, int fdt_node){
 	return 0;
 }
 

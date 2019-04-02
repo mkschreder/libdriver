@@ -141,7 +141,8 @@ am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
 	analog/lp55231.$(OBJEXT) analog/mcp4461.$(OBJEXT) \
 	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
 	disp/ledpanel.$(OBJEXT) gpio/mcp2317.$(OBJEXT) \
-	hbridge/drv8302.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
+	gpio/max14890.$(OBJEXT) hbridge/drv8302.$(OBJEXT) \
+	mem/at24.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
 	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
 	tty/console.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
@@ -346,7 +347,9 @@ libdriver_a_SOURCES = \
     disp/ili9340.c\
     disp/ledpanel.c\
 	gpio/mcp2317.c\
+	gpio/max14890.c\
 	hbridge/drv8302.c\
+	mem/at24.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
     usb/usbd_cdc.c\
@@ -496,6 +499,8 @@ gpio/$(DEPDIR)/$(am__dirstamp):
 	@: > gpio/$(DEPDIR)/$(am__dirstamp)
 gpio/mcp2317.$(OBJEXT): gpio/$(am__dirstamp) \
 	gpio/$(DEPDIR)/$(am__dirstamp)
+gpio/max14890.$(OBJEXT): gpio/$(am__dirstamp) \
+	gpio/$(DEPDIR)/$(am__dirstamp)
 hbridge/$(am__dirstamp):
 	@$(MKDIR_P) hbridge
 	@: > hbridge/$(am__dirstamp)
@@ -504,6 +509,13 @@ hbridge/$(DEPDIR)/$(am__dirstamp):
 	@: > hbridge/$(DEPDIR)/$(am__dirstamp)
 hbridge/drv8302.$(OBJEXT): hbridge/$(am__dirstamp) \
 	hbridge/$(DEPDIR)/$(am__dirstamp)
+mem/$(am__dirstamp):
+	@$(MKDIR_P) mem
+	@: > mem/$(am__dirstamp)
+mem/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) mem/$(DEPDIR)
+	@: > mem/$(DEPDIR)/$(am__dirstamp)
+mem/at24.$(OBJEXT): mem/$(am__dirstamp) mem/$(DEPDIR)/$(am__dirstamp)
 pointer/$(am__dirstamp):
 	@$(MKDIR_P) pointer
 	@: > pointer/$(am__dirstamp)
@@ -544,6 +556,7 @@ mostlyclean-compile:
 	-rm -f disp/*.$(OBJEXT)
 	-rm -f gpio/*.$(OBJEXT)
 	-rm -f hbridge/*.$(OBJEXT)
+	-rm -f mem/*.$(OBJEXT)
 	-rm -f pointer/*.$(OBJEXT)
 	-rm -f tty/*.$(OBJEXT)
 	-rm -f usb/*.$(OBJEXT)
@@ -557,8 +570,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/max14890.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/mcp2317.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@hbridge/$(DEPDIR)/drv8302.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/at24.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/adns3080.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/pmw3360.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/console.Po@am__quote@
@@ -721,6 +736,8 @@ distclean-generic:
 	-rm -f gpio/$(am__dirstamp)
 	-rm -f hbridge/$(DEPDIR)/$(am__dirstamp)
 	-rm -f hbridge/$(am__dirstamp)
+	-rm -f mem/$(DEPDIR)/$(am__dirstamp)
+	-rm -f mem/$(am__dirstamp)
 	-rm -f pointer/$(DEPDIR)/$(am__dirstamp)
 	-rm -f pointer/$(am__dirstamp)
 	-rm -f tty/$(DEPDIR)/$(am__dirstamp)
@@ -737,7 +754,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -783,7 +800,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

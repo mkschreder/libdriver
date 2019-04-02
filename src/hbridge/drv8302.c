@@ -57,13 +57,16 @@ static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
 		analog_write(self->pwm, 0, va);
 		analog_write(self->pwm, 1, vb);
 		analog_write(self->pwm, 2, vc);
+	} else if(argc == 2 && strcmp(argv[1], "reset") == 0) {
+		gpio_reset(self->gpio, PIN_EN_GATE);
+		gpio_set(self->gpio, PIN_EN_GATE);
 	} else if(argc == 2 && strcmp(argv[1], "adc") == 0) {
 		if(!self->adc){
 			console_printf(con, "drv8302: adc not available\n");
 			return -1;
 		}
 		for(int j = 0; j < 100; j++){
-			adc_trigger(self->adc);
+			//adc_trigger(self->adc);
 			thread_sleep_ms(200);
 			for(unsigned int c = 0; c < 16; c++){
 				int16_t val = 0;
@@ -73,9 +76,7 @@ static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
 			console_printf(con, "\r");
 		}
 	} else {
-		if(argc > 1){
-			console_printf(con, "Unknown action %s\n", argv[2]);
-		}
+		console_printf(con, "Unknown action\n");
 	}
 	return 0;
 }

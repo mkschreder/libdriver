@@ -57,7 +57,7 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 		return -1;
 	}
 
-	i2c_read_buf(i2c, addr, MCP4XXX_REG_STATUS | MCP4XXX_OP_READ, data, 2);
+	i2c_read8_buf(i2c, addr, MCP4XXX_REG_STATUS | MCP4XXX_OP_READ, data, 2);
 
 	if(data[0] != 0x01 || data[1] != 0x82){
 		printk("mcp4461: invalid status\n");
@@ -67,8 +67,8 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 	printk("mcp4461: ready (addr %02x)\n", addr);
 
 	data[0] = 0xff;
-	i2c_write_buf(i2c, addr, MCP4XXX_REG_WIPER2 | MCP4XXX_OP_WRITE, data, 1);
-	i2c_write_buf(i2c, addr, MCP4XXX_REG_WIPER3 | MCP4XXX_OP_WRITE, data, 1);
+	i2c_write8_buf(i2c, addr, MCP4XXX_REG_WIPER2 | MCP4XXX_OP_WRITE, data, 1);
+	i2c_write8_buf(i2c, addr, MCP4XXX_REG_WIPER3 | MCP4XXX_OP_WRITE, data, 1);
 
 	return 0;
 }
