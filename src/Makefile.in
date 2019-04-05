@@ -139,12 +139,12 @@ libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
 	analog/lp55231.$(OBJEXT) analog/mcp4461.$(OBJEXT) \
-	baro/bmp280.$(OBJEXT) disp/ili9340.$(OBJEXT) \
-	disp/ledpanel.$(OBJEXT) gpio/mcp2317.$(OBJEXT) \
-	gpio/max14890.$(OBJEXT) hbridge/drv8302.$(OBJEXT) \
-	mem/at24.$(OBJEXT) pointer/pmw3360.$(OBJEXT) \
-	pointer/adns3080.$(OBJEXT) usb/usbd_cdc.$(OBJEXT) \
-	tty/console.$(OBJEXT)
+	baro/bmp280.$(OBJEXT) can/canopen.$(OBJEXT) \
+	disp/ili9340.$(OBJEXT) disp/ledpanel.$(OBJEXT) \
+	gpio/mcp2317.$(OBJEXT) gpio/max14890.$(OBJEXT) \
+	hbridge/drv8302.$(OBJEXT) mem/at24.$(OBJEXT) \
+	pointer/pmw3360.$(OBJEXT) pointer/adns3080.$(OBJEXT) \
+	usb/usbd_cdc.$(OBJEXT) tty/console.$(OBJEXT) vardir.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -344,6 +344,7 @@ libdriver_a_SOURCES = \
 	analog/lp55231.c\
 	analog/mcp4461.c\
     baro/bmp280.c\
+	can/canopen.c\
     disp/ili9340.c\
     disp/ledpanel.c\
 	gpio/mcp2317.c\
@@ -353,7 +354,8 @@ libdriver_a_SOURCES = \
     pointer/pmw3360.c\
     pointer/adns3080.c\
     usb/usbd_cdc.c\
-	tty/console.c
+	tty/console.c\
+	vardir.c
 
 libdriver_a_LIBADD = 
 other_sources = \
@@ -481,6 +483,14 @@ baro/$(DEPDIR)/$(am__dirstamp):
 	@: > baro/$(DEPDIR)/$(am__dirstamp)
 baro/bmp280.$(OBJEXT): baro/$(am__dirstamp) \
 	baro/$(DEPDIR)/$(am__dirstamp)
+can/$(am__dirstamp):
+	@$(MKDIR_P) can
+	@: > can/$(am__dirstamp)
+can/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) can/$(DEPDIR)
+	@: > can/$(DEPDIR)/$(am__dirstamp)
+can/canopen.$(OBJEXT): can/$(am__dirstamp) \
+	can/$(DEPDIR)/$(am__dirstamp)
 disp/$(am__dirstamp):
 	@$(MKDIR_P) disp
 	@: > disp/$(am__dirstamp)
@@ -553,6 +563,7 @@ mostlyclean-compile:
 	-rm -f accgyro/*.$(OBJEXT)
 	-rm -f analog/*.$(OBJEXT)
 	-rm -f baro/*.$(OBJEXT)
+	-rm -f can/*.$(OBJEXT)
 	-rm -f disp/*.$(OBJEXT)
 	-rm -f gpio/*.$(OBJEXT)
 	-rm -f hbridge/*.$(OBJEXT)
@@ -564,10 +575,12 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vardir.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/lp55231.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/mcp4461.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@can/$(DEPDIR)/canopen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/max14890.Po@am__quote@
@@ -730,6 +743,8 @@ distclean-generic:
 	-rm -f analog/$(am__dirstamp)
 	-rm -f baro/$(DEPDIR)/$(am__dirstamp)
 	-rm -f baro/$(am__dirstamp)
+	-rm -f can/$(DEPDIR)/$(am__dirstamp)
+	-rm -f can/$(am__dirstamp)
 	-rm -f disp/$(DEPDIR)/$(am__dirstamp)
 	-rm -f disp/$(am__dirstamp)
 	-rm -f gpio/$(DEPDIR)/$(am__dirstamp)
@@ -754,7 +769,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -800,7 +815,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

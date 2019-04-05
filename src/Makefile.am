@@ -4,6 +4,7 @@ libdriver_a_SOURCES=\
 	analog/lp55231.c\
 	analog/mcp4461.c\
     baro/bmp280.c\
+	can/canopen.c\
     disp/ili9340.c\
     disp/ledpanel.c\
 	gpio/mcp2317.c\
@@ -13,7 +14,8 @@ libdriver_a_SOURCES=\
     pointer/pmw3360.c\
     pointer/adns3080.c\
     usb/usbd_cdc.c\
-	tty/console.c
+	tty/console.c\
+	vardir.c
 libdriver_a_LIBADD=
 
 other_sources =\

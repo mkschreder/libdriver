@@ -57,6 +57,7 @@ struct lp55231 {
 	i2c_device_t i2c;
 	uint8_t addr;
 	struct analog_device analog_dev;
+	struct mutex lock;
 };
 
 static int _lp55231_write_reg(struct lp55231 *self, uint8_t reg, uint8_t value){
@@ -72,9 +73,16 @@ static uint8_t _lp55231_read_reg(struct lp55231 *self, uint8_t reg){
 
 static int _lp55231_analog_write(analog_device_t dev, unsigned int chan, float value){
 	struct lp55231 *self = container_of(dev, struct lp55231, analog_dev.ops);
+
+	thread_mutex_lock(&self->lock);
+
 	chan = (chan > 9)?9:chan;
 	value = constrain_float(value, 0.f, 1.f);
-	return _lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + chan), (uint8_t)(127.f * value));
+	int ret = _lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + chan), (uint8_t)(127.f * value));
+
+	thread_mutex_unlock(&self->lock);
+
+	return ret;
 }
 
 static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *data){
@@ -103,6 +111,7 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 
 	self->addr = addr;
 	self->i2c = i2c;
+	thread_mutex_init(&self->lock);
 
 	// enable
 	thread_sleep_ms(10);

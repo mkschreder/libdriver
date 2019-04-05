@@ -129,9 +129,9 @@ static int _max14890_probe(void *fdt, int fdt_node){
 		MAX14890_CMD_FAULT_STATUS, &status);
 
 	if((status & 0xe000) != 0x4000){
-		printk("max14890: fault status (%04x) invalid. Chip unreachable!\n", status);
+		printk(PRINT_ERROR "max14890: fault status (%04x) invalid. Chip unreachable!\n", status);
 	} else {
-		printk("max14890: ready (%04x)\n", status);
+		printk(PRINT_SUCCESS "max14890: ready (%04x)\n", status);
 	}
 
 	return 0;

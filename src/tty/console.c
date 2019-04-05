@@ -24,9 +24,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+#include <libfirmware/vardir.h>
 #include <libfirmware/console.h>
 #include <libfirmware/serial.h>
-#include <libfirmware/vardir.h>
 #include <libfirmware/types.h>
 #include <libfirmware/chip.h>
 #include <libfirmware/driver.h>
@@ -58,6 +58,10 @@ struct console {
 	char printf_buffer[CONSOLE_MAX_LINE];
 	char line[CONSOLE_MAX_LINE];
 	char *argv[CONSOLE_MAX_ARGS];
+
+	vardir_device_t vardir;
+
+	struct mutex lock;
 };
 
 static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
@@ -89,12 +93,18 @@ static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
 static int _console_printf(console_t dev, const char *fmt, ...){
 	struct console *self = container_of(dev, struct console, dev.ops);
 
+	// lock printf buffer
+	thread_mutex_lock(&self->lock);
+
 	va_list argptr;
 	va_start(argptr, fmt);
 	int r = vsnprintf(self->printf_buffer, sizeof(self->printf_buffer), fmt, argptr);
 	va_end(argptr);
 	size_t len = strlen(self->printf_buffer);
 	int rr = serial_write(self->serial, self->printf_buffer, len, CONSOLE_WRITE_TIMEOUT);
+
+	thread_mutex_unlock(&self->lock);
+
 	if(rr < 0) return rr;
 	return r;
 }
@@ -173,41 +183,39 @@ static int _cmd_ps(struct console *self, int argc, char **argv){
 }
 
 static int _cmd_set(struct console *con, int argc, char **argv){
-	#if 0
-	static char str[32];
-	if (argc == 1) {
-		struct vardir_entry *entry;
-		vardir_for_each_entry(con->vars, entry) {
-			vardir_entry_to_string(entry, str, sizeof(str));
-			con_printf(con, "%04x (name: %s, type: %02x): %s\n", entry->id, (entry->name)?entry->name:"-", entry->type, str);
-		}
-	} else if(argc == 2) {
-		uint32_t id = (uint32_t)strtoul(argv[1], NULL, 16);
-		struct vardir_entry *entry = vardir_find_entry_by_id(con->vars, id);
-		if(entry){
-			if(vardir_entry_to_string(entry, str, sizeof(str)) < 0){
-				con_printf(con, "Could not convert entry to string!\n");
-			} else {
-				con_printf(con, "%04x (%s): %s\n", entry->id, (entry->name)?entry->name:"-", str);
-			}
-		} else {
-			con_printf(con, "Not found (%08x)\n", id);
-		}
-	} else if (argc == 3) {
-		char *var_name = argv[1];
-		char *var_value = argv[2];
-
-		uint32_t id = (uint32_t)strtoul(var_name, NULL, 16);
-		uint32_t val = (uint32_t)strtoul(var_value, NULL, 16);
-		if(id){
-			vardir_set_int(con->vars, id, val);
-		} else if(vardir_set_value(con->vars, var_name, var_value) < 0){
-			con_printf(con, "ERROR: could not set value!\n");
-		} else {
-			// print value
-		}
+	if(!con->vardir){
+		_console_printf(&con->dev.ops, PRINT_ERROR "no vardir\n");
+		return -EIO;
 	}
-	return 0;
+
+	if(argc != 3) {
+		_console_printf(&con->dev.ops, PRINT_ERROR "set <name> <value>\n");
+		return -1;
+	}
+
+	return vardir_set(con->vardir, 0, argv[1], VAR_STRING, argv[2]);
+}
+
+static int _cmd_get(struct console *con, int argc, char **argv){
+	if(!con->vardir){
+		_console_printf(&con->dev.ops, PRINT_ERROR "no vardir\n");
+		return -EIO;
+	}
+
+	if(argc != 2) {
+		_console_printf(&con->dev.ops, PRINT_ERROR "get <name>\n");
+		return -1;
+	}
+
+	static char buf[16];
+
+	int ret = 0;
+	if((ret = vardir_get(con->vardir, 0, argv[1], VAR_STRING, buf, sizeof(buf))) >= 0){
+		_console_printf(&con->dev.ops, "%s=%s\n", argv[1], buf);
+	} else {
+		_console_printf(&con->dev.ops, PRINT_ERROR "ERROR: variable not found\n");
+	}
+	return ret;
 }
 
 #if 0
@@ -220,11 +228,10 @@ static int _cmd_save(struct console *self, int argc, char **argv){
 		return -1;
 	}
 	*/
-#endif
-#endif
 	return 0;
 }
 
+#endif
 static int _cmd_help(struct console *self, int argc, char **argv){
 	(void)argc; (void)argv;
 	struct console_command *cmd;
@@ -281,7 +288,7 @@ static void _console_task(void *ptr){
 	struct console *self = (struct console*)ptr;
 
 	while(1){
-		_console_printf(&self->dev.ops, "# ");
+		_console_printf(&self->dev.ops, "\x1b[0m# ");
 		int rd = 0;
 		memset(self->line, 0, sizeof(self->line));
 
@@ -309,16 +316,22 @@ static void _console_task(void *ptr){
 		// find the command and run it
 		uint8_t handled = 0;
 		struct console_command *cmd;
+		int err = 0;
+		thread_mutex_lock(&self->lock);
+
 		list_for_each_entry(cmd, &self->commands, list){
 			if(strcmp(cmd->name, self->argv[0]) == 0 && cmd->proc){
-				if(cmd->proc(&self->dev.ops, cmd->userptr, argc, self->argv) < 0){
-					_console_printf(&self->dev.ops, "Invalid arguments to command\n");
-				}
+				err = cmd->proc(&self->dev.ops, cmd->userptr, argc, self->argv);
 				handled = 1;
 				break;
 			}
 		}
-		if(!handled){
+
+		thread_mutex_unlock(&self->lock);
+
+		if(handled && err < 0){
+			_console_printf(&self->dev.ops, "ERROR (%d): %s\n", -err, strerror(-err));
+		} else if(!handled){
 			if(0) {}
 			else if(strcmp("ps", self->argv[0]) == 0){
 				_cmd_ps(self, argc, self->argv);
@@ -326,10 +339,10 @@ static void _console_task(void *ptr){
 			else if(strcmp("set", self->argv[0]) == 0){
 				_cmd_set(self, argc, self->argv);
 			}
-#if 0
 			else if(strcmp("get", self->argv[0]) == 0){
 				_cmd_get(self, argc, self->argv);
 			}
+#if 0
 			else if(strcmp("save", self->argv[0]) == 0){
 				_cmd_save(self, argc, self->argv);
 			}
@@ -338,6 +351,7 @@ static void _console_task(void *ptr){
 				_cmd_help(self, 0, NULL);
 			}
 		}
+
         // send end of transmission
 		_console_printf(&self->dev.ops, "\x04");
 	}
@@ -345,7 +359,9 @@ static void _console_task(void *ptr){
 
 static int _console_add_command(console_t dev, struct console_command *cmd){
 	struct console *self = container_of(dev, struct console, dev.ops);
+	thread_mutex_lock(&self->lock);
 	list_add_tail(&cmd->list, &self->commands);
+	thread_mutex_unlock(&self->lock);
 	return 0;
 }
 
@@ -356,6 +372,8 @@ static const struct console_ops _console_ops = {
 
 int _console_probe(void *fdt, int fdt_node){
 	struct console *self = kzmalloc(sizeof(struct console));
+	vardir_device_t vardir = vardir_find_by_ref(fdt, fdt_node, "vardir");
+
 	int node = fdt_find_node_by_ref(fdt, fdt_node, "serial");
 	if(node < 0){
 		printk("console: serial port missing\n");
@@ -370,7 +388,9 @@ int _console_probe(void *fdt, int fdt_node){
 
 	console_init(&self->dev, fdt, fdt_node, &_console_ops);
 	self->serial = serial;
+	self->vardir = vardir;
 	INIT_LIST_HEAD(&self->commands);
+	thread_mutex_init(&self->lock);
 
 	if(thread_create(
 		  _console_task,
