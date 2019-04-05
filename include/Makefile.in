@@ -297,7 +297,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 nobase_pkginclude_HEADERS = \
-	dts/mcp2317.h
+	dts/mcp2317.h\
+	can/ds402.h
 
 all: all-am
 
