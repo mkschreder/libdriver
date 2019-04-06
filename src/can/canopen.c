@@ -475,6 +475,13 @@ static void _handle_message_lss(struct canopen *self, struct can_message *rx_msg
 #define PDO_SEND_SYNC 1
 #define PDO_SEND_ASYNC 2
 
+static void _canopen_set_sync_period(struct canopen *self, uint32_t period_us){
+	self->profile.cycle_period = constrain_u32((uint32_t)(period_us - 1), 0, 1000000);
+	// schedule a sync right away
+	self->sync_timeout = micros();
+}
+
+
 static void _send_pending_pdos(struct canopen *self, uint32_t pdo_types){
 	for(uint16_t c = 0; c < CANOPEN_DEFAULT_TXPDO_COUNT; c++){
 		struct canopen_pdo_entry *pdo = &self->profile.txpdo[c];
@@ -912,12 +919,14 @@ static void _service_runner(struct canopen *self){
 
 static void _canopen_tx(void *ptr){
 	struct canopen *self = (struct canopen*)ptr;
+	uint32_t t = thread_ticks_count();
 	while(1){
 		_service_runner(self);
-		if(thread_sem_take_wait(&self->quit, 1) == 0){
+		if(thread_sem_take_wait(&self->quit, 0) == 0){
 			// this does the delay and if it's time to quit it quits right away without waiting
 			break;
 		}
+		thread_sleep_ms_until(&t, 1);
 	}
 }
 
@@ -931,7 +940,10 @@ static ssize_t _comm_range_read(regmap_range_t range, uint32_t addr, regmap_valu
 
 	switch(id){
 		case CANOPEN_REG_DEVICE_SERIAL:
-			if(sub < 1 || sub > 4) return -EINVAL;
+			if(sub < 1 || sub > 4) {
+				ret = -EINVAL;
+				goto done;
+			}
 			regmap_convert_u32(self->profile.identity[(sub - 1) & 0x3], type, data, size);
 			break;
 		case CANOPEN_REG_DEVICE_SYNC_COB_ID:
@@ -1006,6 +1018,7 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 		regmap_mem_to_u32(type, data, size, &self->profile.sync_cob_id);
 	} else if(id == CANOPEN_REG_DEVICE_CYCLE_PERIOD) {
 		regmap_mem_to_u32(type, data, size, &self->profile.cycle_period);
+		self->sync_timeout = micros();
 		self->mode = CANOPEN_MASTER;
 	} else if(id >= 0x140000 && id <= 0x1AFF00) {
 		uint8_t pdo_id = (id >> 8) & 0x7f;
@@ -1098,13 +1111,6 @@ void canopen_set_node_id(struct canopen *self, uint8_t id){
 	self->address = id;
 	thread_mutex_unlock(&self->lock);
 }
-
-static void _canopen_set_sync_period(struct canopen *self, uint32_t period_us){
-	self->profile.cycle_period = constrain_u32((uint32_t)(period_us - 1), 0, 1000000);
-	// schedule a sync right away
-	self->sync_timeout = micros();
-}
-
 #if 0
 int canopen_lss_find_node(struct canopen *self, struct canopen_serial_number *serial){
 	if(!serial) return -EINVAL;

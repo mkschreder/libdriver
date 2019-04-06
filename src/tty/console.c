@@ -94,7 +94,7 @@ static int _console_printf(console_t dev, const char *fmt, ...){
 	struct console *self = container_of(dev, struct console, dev.ops);
 
 	// lock printf buffer
-	thread_mutex_lock(&self->lock);
+	//thread_mutex_lock(&self->lock);
 
 	va_list argptr;
 	va_start(argptr, fmt);
@@ -103,7 +103,7 @@ static int _console_printf(console_t dev, const char *fmt, ...){
 	size_t len = strlen(self->printf_buffer);
 	int rr = serial_write(self->serial, self->printf_buffer, len, CONSOLE_WRITE_TIMEOUT);
 
-	thread_mutex_unlock(&self->lock);
+	//thread_mutex_unlock(&self->lock);
 
 	if(rr < 0) return rr;
 	return r;
@@ -126,6 +126,7 @@ static int _cmd_ps(struct console *self, int argc, char **argv){
 	(void)self;
 	(void)argc;
 	(void)argv;
+	thread_meminfo();
 	// realtime tasks
 //#if !defined(__linux__)
 #if 0
@@ -395,7 +396,7 @@ int _console_probe(void *fdt, int fdt_node){
 	if(thread_create(
 		  _console_task,
 		  "shell",
-		  520,
+		  620,
 		  self,
 		  1,
 		  NULL) < 0){
