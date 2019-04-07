@@ -35,6 +35,7 @@
 #include <libfirmware/driver.h>
 #include <libfirmware/canopen.h>
 #include <libfirmware/regmap.h>
+#include <libfirmware/memory.h>
 
 #include <stdio.h>
 #include <limits.h>
@@ -52,13 +53,14 @@
 #define CANOPEN_LSS_TIMEOUT_MS 50
 #define CANOPEN_SDO_TIMEOUT_MS 100
 
-#if defined(DEBUG) && defined(__linux__)
-#define canopen_debug(...) do { printf("CANOPEN: " __VA_ARGS__); fflush(stdout); } while(0)
+#if defined(DEBUG)
+#define canopen_debug(...) do { printk("CANOPEN: " __VA_ARGS__); } while(0)
 #else
 #define canopen_debug(...) do {} while(0)
 #endif
 
 #define canopen_msg_get_cob(msg) ((msg)->id & (uint32_t)~(uint32_t)0x7f)
+#define CANOPEN_MIN_SYNC_PERIOD_US 1000
 
 struct canopen_pdo_entry {
 	uint32_t cob_id;
@@ -253,6 +255,8 @@ struct canopen {
 	struct mutex lock;
 
 	timestamp_t sync_timeout;
+
+	struct memory_device mem;
 };
 
 
@@ -476,9 +480,9 @@ static void _handle_message_lss(struct canopen *self, struct can_message *rx_msg
 #define PDO_SEND_ASYNC 2
 
 static void _canopen_set_sync_period(struct canopen *self, uint32_t period_us){
-	self->profile.cycle_period = constrain_u32((uint32_t)(period_us - 1), 0, 1000000);
+	self->profile.cycle_period = thread_ticks_from_us(period_us);
 	// schedule a sync right away
-	self->sync_timeout = micros();
+	self->sync_timeout = thread_ticks_count();
 }
 
 
@@ -548,7 +552,7 @@ static void _send_pending_pdos(struct canopen *self, uint32_t pdo_types){
 	}
 }
 
-static void _handle_message(struct can_listener *listener, can_device_t can, struct can_message *msg){
+static void _canopen_handle_message(struct can_listener *listener, can_device_t can, struct can_message *msg){
 	struct canopen *self = container_of(listener, struct canopen, listener);
 
 	uint32_t msg_id = msg->id & 0x7ff;
@@ -684,8 +688,7 @@ static void _handle_message(struct can_listener *listener, can_device_t can, str
 					tmsg.data[2] = msg->data[2];
 					tmsg.data[3] = msg->data[3];
 
-					uint32_t value = 0;
-					int size = regmap_read_u32(self->regmap, id, &value);
+					int size = regmap_read_u32(self->regmap, id, &val);
 					switch(size){
 						case sizeof(uint32_t):
 							tmsg.data[0] = CANOPEN_SDO_CMD_READ4;
@@ -700,9 +703,11 @@ static void _handle_message(struct can_listener *listener, can_device_t can, str
 							tmsg.data[4] = (uint8_t)(val >> 0);
 						break;
 						default:
+							canopen_debug("SDO could not read reg %08x\n", id);
 							u32_to_co32(CANOPEN_SDO_ERR_NO_EXIST, &tmsg.data[4]);
 						break;
 					}
+					canopen_debug("SDO send response %08x\n", id);
 					can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT);
 				} break;
 				case CANOPEN_SDO_CMD_WRITE1:
@@ -903,8 +908,13 @@ static void _service_runner(struct canopen *self){
 
 	// send sync signal
 	timestamp_t t = micros();
-	if(self->mode == CANOPEN_MASTER && !(self->profile.sync_cob_id & CANOPEN_COB_DISABLED) && self->profile.cycle_period != 0 && time_after(t, self->sync_timeout)){
-		self->sync_timeout = t + self->profile.cycle_period;
+	if(self->mode == CANOPEN_MASTER &&
+		!(self->profile.sync_cob_id & CANOPEN_COB_DISABLED) &&
+		self->profile.cycle_period != 0 &&
+		time_after(t, self->sync_timeout)){
+
+		uint32_t period = constrain_u32(self->profile.cycle_period, CANOPEN_MIN_SYNC_PERIOD_US, 0xffffffff);
+		self->sync_timeout = t + period - CANOPEN_MIN_SYNC_PERIOD_US;
 
 		canopen_send_sync(self);
 
@@ -1106,11 +1116,13 @@ void canopen_set_identity(struct canopen *self, uint32_t identity[4]){
 	thread_mutex_unlock(&self->lock);
 }
 
+/*
 void canopen_set_node_id(struct canopen *self, uint8_t id){
 	thread_mutex_lock(&self->lock);
 	self->address = id;
 	thread_mutex_unlock(&self->lock);
 }
+*/
 #if 0
 int canopen_lss_find_node(struct canopen *self, struct canopen_serial_number *serial){
 	if(!serial) return -EINVAL;
@@ -1573,12 +1585,12 @@ int canopen_pdo_rx_local(struct canopen *self, const struct canopen_pdo_config *
 }
 
 int canopen_pdo_rx(struct canopen *self, uint8_t node_id, const struct canopen_pdo_config *conf){
-	if(self->mode != CANOPEN_MASTER) return -1;
+	//if(self->mode != CANOPEN_MASTER) return -1;
 	return _canopen_pdo_configure(self, 0x140000, node_id, conf);
 }
 
 int canopen_pdo_tx(struct canopen *self, uint8_t node_id, const struct canopen_pdo_config *conf){
-	if(self->mode != CANOPEN_MASTER) return -1;
+	//if(self->mode != CANOPEN_MASTER) return -1;
 	return _canopen_pdo_configure(self, 0x180000, node_id, conf);
 }
 
@@ -1657,12 +1669,28 @@ const char *canopen_strerror(int32_t err){
 	return "Unknown canopen error";
 }
 
+static int _memory_read(memory_device_t dev, size_t offset, void *data, size_t size){
+	struct canopen *self = container_of(dev, struct canopen, mem.ops);
+	return canopen_sdo_read(self, (uint8_t)(((uint32_t)offset) >> 24), offset & 0xffffff, data, size);
+}
+
+static int _memory_write(memory_device_t dev, size_t offset, const void *data, size_t size){
+	struct canopen *self = container_of(dev, struct canopen, mem.ops);
+	return canopen_sdo_write(self, (uint8_t)(((uint32_t)offset) >> 24), offset & 0xffffff, data, size);
+}
+
+static struct memory_device_ops _memory_ops = {
+	.read = _memory_read,
+	.write = _memory_write
+};
+
 int _canopen_probe(void *fdt, int fdt_node){
 	can_device_t can = can_find_by_ref(fdt, fdt_node, "can");
 	canopen_mode_t mode = (canopen_mode_t)fdt_get_int_or_default(fdt, fdt_node, "mode", CANOPEN_MASTER);
 	regmap_device_t regmap = regmap_find_by_ref(fdt, fdt_node, "regmap");
 	uint32_t sync_cob_id = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "sync_cob_id", CANOPEN_COB_SYNC_OR_EMCY);
 	uint32_t sync_interval = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "sync_interval", 0);
+	uint8_t address = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "address", 0);
 
 	if(!can){
 		printk(PRINT_ERROR "canopen: can missing\n");
@@ -1680,6 +1708,7 @@ int _canopen_probe(void *fdt, int fdt_node){
 	self->port = can;
 	self->mode = mode;
 	self->regmap = regmap;
+	self->address = address;
 	INIT_LIST_HEAD(&self->emcy_listeners);
 
 	if(mode == CANOPEN_MASTER && sync_interval){
@@ -1733,8 +1762,12 @@ int _canopen_probe(void *fdt, int fdt_node){
 	thread_mutex_init(&self->sdo.mx);
 	thread_sem_init_counting(&self->sdo.req.done, 1, 0);
 
-	can_listener_init(&self->listener, _handle_message);
+	can_listener_init(&self->listener, _canopen_handle_message);
 	can_subscribe(self->port, &self->listener);
+
+	// register canopen as memory device.
+	memory_device_init(&self->mem, fdt, fdt_node, &_memory_ops);
+	memory_device_register(&self->mem);
 
 	thread_create(_canopen_tx, "cano_tx", 230, self, 3, &self->task);
 

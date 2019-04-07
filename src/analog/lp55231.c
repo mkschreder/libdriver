@@ -55,6 +55,8 @@ enum {
 
 struct lp55231 {
 	i2c_device_t i2c;
+	gpio_device_t gpio;
+	uint32_t en_pin;
 	uint8_t addr;
 	struct analog_device analog_dev;
 	struct mutex lock;
@@ -97,11 +99,11 @@ struct analog_device_ops _analog_ops = {
 static int _lp55231_probe(void *fdt, int fdt_node){
 	i2c_device_t i2c = i2c_find_by_ref(fdt, fdt_node, "i2c");
 	uint8_t addr = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "reg", 0x32);
+	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
+	uint32_t en_pin = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "en_pin", 0);
 
-	if(!i2c){
-		printk("lp55231: no i2c\n");
-		return -1;
-	}
+	if(!i2c){ printk("lp55231: no i2c\n"); return -EINVAL; }
+	if(!gpio) { printk("lp55231: no gpio\n"); return -EINVAL; }
 
 	struct lp55231 *self = kzmalloc(sizeof(struct lp55231));
 	if(!self){
@@ -111,15 +113,21 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 
 	self->addr = addr;
 	self->i2c = i2c;
+	self->gpio = gpio;
+	self->en_pin = en_pin;
 	thread_mutex_init(&self->lock);
 
-	// enable
-	thread_sleep_ms(10);
+	// toggle hardware enable pin
+	gpio_set(self->gpio, self->en_pin);
+	thread_sleep_us(50);
+	// toggle enable in the register
 	_lp55231_write_reg(self, LP55231_REG_CTRL1, LP55231_REG_CTRL1_BIT_EN);
-	thread_sleep_ms(10);
+	thread_sleep_us(50);
 
 	_lp55231_write_reg(self, LP55231_REG_MISC, 0x09);
+	thread_sleep_us(50);
 
+	// initialize all leds to half pwm
 	for(int c = 0; c < 8; c++){
 		_lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + c), 0x80);
 	}
