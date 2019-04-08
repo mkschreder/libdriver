@@ -121,7 +121,7 @@ static struct gpio_device_ops _mcp2317_ops = {
 	.read_pin = _mcp2317_read_pin
 };
 
-static int _mcp2317_cmd(console_t con, void *userptr, int argc, char **argv){
+static int _mcp2317_cmd(console_device_t con, void *userptr, int argc, char **argv){
 	struct mcp2317 *self = (struct mcp2317*)userptr;
 	if(argc == 2 && strcmp(argv[1], "dumpregs") == 0){
 		for(uint8_t reg = 0; reg < 0x16; reg++){
@@ -161,7 +161,7 @@ static int _mcp2317_probe(void *fdt, int fdt_node){
 	self->gpio = gpio;
 	self->spi = spi;
 
-	console_t console = console_find_by_ref(fdt, fdt_node, "console");
+	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 	if(console){
 		char name[32];
 		static int instances = 0;

@@ -53,8 +53,9 @@
 #define CANOPEN_LSS_TIMEOUT_MS 50
 #define CANOPEN_SDO_TIMEOUT_MS 100
 
+//#define DEBUG
 #if defined(DEBUG)
-#define canopen_debug(...) do { printk("CANOPEN: " __VA_ARGS__); } while(0)
+#define canopen_debug(...) do { printk("%d ", self->address); printk("CANOPEN: " __VA_ARGS__);} while(0)
 #else
 #define canopen_debug(...) do {} while(0)
 #endif
@@ -69,7 +70,7 @@ struct canopen_pdo_entry {
 	uint16_t event_time;
 	uint32_t map[CANOPEN_DEFAULT_PDO_MAP_COUNT];
 	uint8_t map_entries; // number of entries as exposed on the can bus
-	uint8_t last[8]; // last transmitted message
+	uint8_t last[CANOPEN_DEFAULT_PDO_MAP_COUNT]; // last transmitted message
 	bool transmit;
 	uint8_t sync_cycles;
 };
@@ -487,37 +488,45 @@ static void _canopen_set_sync_period(struct canopen *self, uint32_t period_us){
 
 
 static void _send_pending_pdos(struct canopen *self, uint32_t pdo_types){
+	struct can_message tmsg;
 	for(uint16_t c = 0; c < CANOPEN_DEFAULT_TXPDO_COUNT; c++){
 		struct canopen_pdo_entry *pdo = &self->profile.txpdo[c];
 		if(!pdo->map_entries) continue;
-		struct can_message tmsg;
 		can_message_init(&tmsg);
 		tmsg.id = pdo->cob_id;
 		tmsg.len = 8;
 		uint32_t pos = 0;
+		//canopen_debug("PDO send types %04x %d\n", pdo_types, self->mode);
 		for(uint32_t m_id = 0; m_id < pdo->map_entries; m_id++){
 			uint32_t m = pdo->map[m_id];
 			uint32_t idx = (uint32_t)(m >> 8);
+			//canopen_debug("PDO map entry %06x\n", idx);
 
 			switch(m & 0xff){
 				case CANOPEN_PDO_SIZE_32: {
 					if(pos + 4 > sizeof(tmsg.data)) break;
 					uint32_t value = 0;
-					regmap_read_u32(self->regmap, idx, &value);
+					if(regmap_read_u32(self->regmap, idx, &value) != sizeof(uint32_t)){
+						canopen_debug("Could not read pdo32 map entry for %08x\n", idx);
+					}
 					u32_to_co32(value, &tmsg.data[pos]);
 					pos += 4;
 				} break;
 				case CANOPEN_PDO_SIZE_16: {
 					if(pos + 2 > sizeof(tmsg.data)) break;
 					uint16_t value = 0;
-					regmap_read_u16(self->regmap, idx, &value);
+					if(regmap_read_u16(self->regmap, idx, &value) != sizeof(uint16_t)){
+						canopen_debug("Could not read pdo16 map entry for %08x\n", idx);
+					}
 					u16_to_co16(value, &tmsg.data[pos]);
 					pos += 2;
 				} break;
 				case CANOPEN_PDO_SIZE_8: {
 					if(pos + 1 > sizeof(tmsg.data)) break;
 					uint8_t value = 0;
-					regmap_read_u8(self->regmap, idx, &value);
+					if(regmap_read_u8(self->regmap, idx, &value) != sizeof(uint8_t)){
+						canopen_debug("Could not read pdo8 map entry for %08x\n", idx);
+					}
 					tmsg.data[pos] = value;
 					pos += 1;
 				} break;
@@ -532,6 +541,7 @@ static void _send_pending_pdos(struct canopen *self, uint32_t pdo_types){
 			pdo->sync_cycles--;
 		}
 
+		//canopen_debug("PDO send types %04x, id %04x, cycles %d, len %d at %02x\n", pdo_types, pdo->cob_id, pdo->sync_cycles, tmsg.len, self->address);
 		if(
 			((pdo_types & PDO_SEND_SYNC) && (
 				(pdo->transmit && pdo->type == CANOPEN_PDO_TYPE_ACYCLIC) || // if the pdo is marked for transmission and the type is acyclic
@@ -542,7 +552,10 @@ static void _send_pending_pdos(struct canopen *self, uint32_t pdo_types){
 			))
 		){
 			if(can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT) < 0){
+				canopen_debug(PRINT_ERROR "CAN send failed\n");
 				// TODO: log failure
+			} else {
+				//canopen_debug(PRINT_SUCCESS "CAN send ok\n");
 			}
 			// pdo type is number jj
 			if(pdo->type >= CANOPEN_PDO_TYPE_CYCLIC(1) && pdo->type <= CANOPEN_PDO_TYPE_CYCLIC(240)){
@@ -558,6 +571,7 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 	uint32_t msg_id = msg->id & 0x7ff;
 	uint32_t cob = msg_id & (uint32_t)~(uint32_t)0x7f;
 	uint32_t node_id = msg_id & 0x7f;
+	struct can_message tmsg;
 
 	switch(cob){
 		case CANOPEN_COB_NMT: {
@@ -587,6 +601,7 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 		case CANOPEN_COB_RXPDO_1:
 		case CANOPEN_COB_RXPDO_2:
 		case CANOPEN_COB_RXPDO_3: {
+			//canopen_debug("PDO id %08x, cob %08x, node %08x\n", msg_id, cob, msg_id);
 			// parse and store the received pdo
 			struct canopen_pdo_entry *pdo = NULL;
 			for(uint16_t c = 0; c < CANOPEN_DEFAULT_RXPDO_COUNT; c++){
@@ -621,6 +636,7 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 			}
 		} break;
 		case CANOPEN_COB_TXSDO: {
+			canopen_debug("TXSDO id %08x, cob %08x, node %08x\n", msg_id, cob, msg_id);
 			// only process these if we have an outstanding request
 			if(!self->sdo.req.running) break;
 			uint8_t cmd = msg->data[0];
@@ -668,8 +684,8 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 			}
 		} break;
 		case CANOPEN_COB_RXSDO: {
+			canopen_debug("RXSDO id %08x, cob %08x, node %08x\n", msg_id, cob, msg_id);
 			if(node_id != self->address) break;
-			canopen_debug("SDO request received\n");
 			// master to slave
 			uint8_t cmd = msg->data[0];
 			switch(cmd){
@@ -679,7 +695,6 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 				case CANOPEN_SDO_CMD_READ4: {
 					uint32_t id = (uint32_t)(((uint32_t)co16_to_u16(&msg->data[1]) << 8) | msg->data[3]);
 					uint32_t val = 0;
-					struct can_message tmsg;
 					can_message_init(&tmsg);
 					tmsg.id = (uint32_t)(CANOPEN_COB_TXSDO | self->address);
 					tmsg.len = 8;
@@ -707,8 +722,9 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 							u32_to_co32(CANOPEN_SDO_ERR_NO_EXIST, &tmsg.data[4]);
 						break;
 					}
-					canopen_debug("SDO send response %08x\n", id);
-					can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT);
+					if(can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT) < 0){
+						canopen_debug(PRINT_ERROR "failed to send response for sdo %08x\n", id);
+					}
 				} break;
 				case CANOPEN_SDO_CMD_WRITE1:
 				case CANOPEN_SDO_CMD_WRITE2:
@@ -732,9 +748,8 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 							val = ((uint32_t)msg->data[4]);
 							break;
 					}
-					struct can_message tmsg;
-					canopen_debug("SDO write %08x %08x\n", idx, val);
 					if(regmap_write_u32(self->regmap, idx, val) >= 0){
+						canopen_debug("SDO write %08x %08x: ok\n", idx, val);
 						can_message_init(&tmsg);
 						tmsg.id = (uint32_t)(CANOPEN_COB_TXSDO | self->address);
 						tmsg.len = 8;
@@ -743,6 +758,7 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 						tmsg.data[2] = msg->data[2];
 						tmsg.data[3] = msg->data[3];
 					} else {
+						canopen_debug("SDO write %08x %08x: fail\n", idx, val);
 						can_message_init(&tmsg);
 						tmsg.id = (uint32_t)(CANOPEN_COB_TXSDO | self->address);
 						tmsg.len = 8;
@@ -788,7 +804,6 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 					case CANOPEN_LSS_CMD_GET_ID: {
 						if(!self->lss.enabled || self->lss.mute) break;
 						// respond with node id
-						struct can_message tmsg;
 						can_message_init(&tmsg);
 						tmsg.id = CANOPEN_COB_LSS | CANOPEN_LSS_RX;
 						tmsg.len = 8;
@@ -799,7 +814,6 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 					case CANOPEN_LSS_CMD_SET_ID: {
 						if(!self->lss.enabled || self->lss.mute) break;
 						self->address = msg->data[1] & 0x7f;
-						struct can_message tmsg;
 						can_message_init(&tmsg);
 						tmsg.id = CANOPEN_COB_LSS | CANOPEN_LSS_RX;
 						tmsg.len = 8;
@@ -833,7 +847,6 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 						uint32_t mask = 0xffffffff << bit;
 						if((myid & mask) == (id & mask)){
 							canopen_debug("LSS: confirming %d bits from left in %08x %08x (%08x) Masked: %08x %08x\n", 32 - bit, myid, id, mask, myid & mask, id & mask);
-							struct can_message tmsg;
 							can_message_init(&tmsg);
 							tmsg.id = CANOPEN_COB_LSS | CANOPEN_LSS_RX;
 							tmsg.len = 8;
@@ -891,23 +904,19 @@ static void _service_runner(struct canopen *self){
 	//struct canopen *self = container_of(work, struct canopen, work);
 
 	// handle timeout of the sdo request
+	timestamp_t t = micros();
 	if(self->sdo.req.running){
-		timestamp_t time = micros();
-		if(time_after(time, self->sdo.req.timeout)) {
+		if(time_after(t, self->sdo.req.timeout)) {
 			self->sdo.req.result = -ETIMEDOUT;
 			self->sdo.req.running = false;
 			thread_sem_give(&self->sdo.req.done);
 		}
 	}
 
-	// send out any pending pdos
-	_send_pending_pdos(self, PDO_SEND_ASYNC);
-
 	// process timeouts associated with lss protocol
 	_process_lss_timeouts(self);
 
 	// send sync signal
-	timestamp_t t = micros();
 	if(self->mode == CANOPEN_MASTER &&
 		!(self->profile.sync_cob_id & CANOPEN_COB_DISABLED) &&
 		self->profile.cycle_period != 0 &&
@@ -918,13 +927,13 @@ static void _service_runner(struct canopen *self){
 
 		canopen_send_sync(self);
 
+		//canopen_debug("send sync pdos at %02x, type %d\n", self->address, self->mode);
 		// send any local pdos that we have configured on the master
 		_send_pending_pdos(self, PDO_SEND_SYNC);
 	}
 
-	// reschedule the work
-	// TODO: set delay based on when next even should occur
-	//queue_work(work, 0);
+	// send out any pending pdos
+	_send_pending_pdos(self, PDO_SEND_ASYNC);
 }
 
 static void _canopen_tx(void *ptr){
@@ -948,19 +957,21 @@ static ssize_t _comm_range_read(regmap_range_t range, uint32_t addr, regmap_valu
 
 	thread_mutex_lock(&self->lock);
 
+	canopen_debug("COMM read id %08x\n", id);
+
 	switch(id){
 		case CANOPEN_REG_DEVICE_SERIAL:
 			if(sub < 1 || sub > 4) {
 				ret = -EINVAL;
 				goto done;
 			}
-			regmap_convert_u32(self->profile.identity[(sub - 1) & 0x3], type, data, size);
+			ret = regmap_convert_u32(self->profile.identity[(sub - 1) & 0x3], type, data, size);
 			break;
 		case CANOPEN_REG_DEVICE_SYNC_COB_ID:
-			regmap_convert_u32(self->profile.sync_cob_id, type, data, size);
+			ret = regmap_convert_u32(self->profile.sync_cob_id, type, data, size);
 			break;
 		case CANOPEN_REG_DEVICE_CYCLE_PERIOD:
-			regmap_convert_u32(self->profile.cycle_period, type, data, size);
+			ret = regmap_convert_u32(self->profile.cycle_period, type, data, size);
 			break;
 		default: break;
 	}
@@ -973,13 +984,14 @@ static ssize_t _comm_range_read(regmap_range_t range, uint32_t addr, regmap_valu
 				goto done;
 			}
 			struct canopen_pdo_entry *pdo = &self->profile.rxpdo[pdo_id];
-			canopen_debug("PDO write settings for RXPDO %d\n", pdo_id);
+			//canopen_debug("PDO read settings for RXPDO %d\n", pdo_id);
 			switch(sub){
-				case 1: regmap_convert_u32(pdo->cob_id, type, data, size); break;
-				case 2: regmap_convert_u32(pdo->type, type, data, size); break;
-				case 3: regmap_convert_u32(pdo->inhibit_time, type, data, size); break;
-				case 4: regmap_convert_u32(0, type, data, size); break; // reserved
-				case 5: regmap_convert_u32(pdo->event_time, type, data, size); break;
+				case 0: ret = regmap_convert_u32(CANOPEN_DEFAULT_RXPDO_COUNT, type, data, size); break;
+				case 1: ret = regmap_convert_u32(pdo->cob_id, type, data, size); break;
+				case 2: ret = regmap_convert_u32(pdo->type, type, data, size); break;
+				case 3: ret = regmap_convert_u32(pdo->inhibit_time, type, data, size); break;
+				case 4: ret = regmap_convert_u32(0, type, data, size); break; // reserved
+				case 5: ret = regmap_convert_u32(pdo->event_time, type, data, size); break;
 			}
 		} else if(0x160000 == (id & 0xff8000)){
 			if(sub >= 8 || pdo_id > CANOPEN_DEFAULT_RXPDO_COUNT) {
@@ -987,21 +999,22 @@ static ssize_t _comm_range_read(regmap_range_t range, uint32_t addr, regmap_valu
 				goto done;
 			}
 			struct canopen_pdo_entry *pdo = &self->profile.rxpdo[pdo_id];
-			if(sub == 0) regmap_convert_u32(pdo->map_entries, type, data, size);
-			else regmap_convert_u32(pdo->map[sub - 1], type, data, size);
+			if(sub == 0) ret = regmap_convert_u32(pdo->map_entries, type, data, size);
+			else ret = regmap_convert_u32(pdo->map[sub - 1], type, data, size);
 		} else if(0x180000 == (id & 0xff8000)){
 			if(pdo_id > CANOPEN_DEFAULT_TXPDO_COUNT) {
 				ret = -1;
 				goto done;
 			}
 			struct canopen_pdo_entry *pdo = &self->profile.txpdo[pdo_id];
-			canopen_debug("PDO write settings for TXPDO %d\n", pdo_id);
+			canopen_debug("PDO read settings for TXPDO %d\n", pdo_id);
 			switch(sub){
-				case 1: regmap_convert_u32(pdo->cob_id, type, data, size); break;
-				case 2: regmap_convert_u32(pdo->type, type, data, size); break;
-				case 3: regmap_convert_u32(pdo->inhibit_time, type, data, size); break;
-				case 4: regmap_convert_u32(0, type, data, size); break; // reserved
-				case 5: regmap_convert_u32(pdo->event_time, type, data, size); break;
+				case 0: ret = regmap_convert_u32(CANOPEN_DEFAULT_TXPDO_COUNT, type, data, size); break;
+				case 1: ret = regmap_convert_u32(pdo->cob_id, type, data, size); break;
+				case 2: ret = regmap_convert_u32(pdo->type, type, data, size); break;
+				case 3: ret = regmap_convert_u32(pdo->inhibit_time, type, data, size); break;
+				case 4: ret = regmap_convert_u32(0, type, data, size); break; // reserved
+				case 5: ret = regmap_convert_u32(pdo->event_time, type, data, size); break;
 			}
 		} else if(0x1A0000 == (id & 0xff8000)){
 			if(sub >= 8 || pdo_id > CANOPEN_DEFAULT_TXPDO_COUNT) {
@@ -1009,8 +1022,8 @@ static ssize_t _comm_range_read(regmap_range_t range, uint32_t addr, regmap_valu
 				goto done;
 			}
 			struct canopen_pdo_entry *pdo = &self->profile.txpdo[pdo_id];
-			if(sub == 0) regmap_convert_u32(pdo->map_entries, type, data, size);
-			else regmap_convert_u32(pdo->map[sub - 1], type, data, size);
+			if(sub == 0) ret = regmap_convert_u32(pdo->map_entries, type, data, size);
+			else ret = regmap_convert_u32(pdo->map[sub - 1], type, data, size);
 		}
 	}
 done: 
@@ -1041,16 +1054,20 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 			switch(sub){
 				case 1:
 					regmap_mem_to_u32(type, data, size, &pdo->cob_id);
+					canopen_debug("rxpdo[%d].cob_id = %08x\n", pdo_id, pdo->cob_id);
 					break;
 				case 2:
 					regmap_mem_to_u8(type, data, size, &pdo->type);
+					canopen_debug("rxpdo[%d].type = %02x\n", pdo_id, pdo->type);
 					break;
 				case 3:
 					regmap_mem_to_u16(type, data, size, &pdo->inhibit_time);
+					canopen_debug("rxpdo[%d].inhibit_time = %04x\n", pdo_id, pdo->inhibit_time);
 					break;
 				case 4: break; // reserved
 				case 5:
 					regmap_mem_to_u16(type, data, size, &pdo->event_time);
+					canopen_debug("rxpdo[%d].event_time = %04x\n", pdo_id, pdo->event_time);
 					break;
 			}
 		} else if(0x160000 == (id & 0xff8000)){
@@ -1061,8 +1078,10 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 			struct canopen_pdo_entry *pdo = &self->profile.rxpdo[pdo_id];
 			if(sub == 0) {
 				regmap_mem_to_u8(type, data, size, &pdo->map_entries);
+				canopen_debug("rxpdo[%d].map_entries = %08x\n", pdo_id, pdo->map_entries);
 			} else {
 				regmap_mem_to_u32(type, data, size, &pdo->map[sub - 1]);
+				canopen_debug("rxpdo[%d].map[%d] = %04x\n", pdo_id, sub - 1, pdo->map[sub-1]);
 			}
 		} else if(0x180000 == (id & 0xff8000)){
 			if(pdo_id > CANOPEN_DEFAULT_TXPDO_COUNT) {
@@ -1073,16 +1092,20 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 			switch(sub){
 				case 1:
 					regmap_mem_to_u32(type, data, size, &pdo->cob_id);
+					canopen_debug("txpdo[%d].cob_id = %08x\n", pdo_id, pdo->cob_id);
 					break;
 				case 2:
 					regmap_mem_to_u8(type, data, size, &pdo->type);
+					canopen_debug("txpdo[%d].type = %08x\n", pdo_id, pdo->type);
 					break;
 				case 3:
 					regmap_mem_to_u16(type, data, size, &pdo->inhibit_time);
+					canopen_debug("txpdo[%d].inhibit_time = %08x\n", pdo_id, pdo->inhibit_time);
 					break;
 				case 4: break; // reserved
 				case 5:
 					regmap_mem_to_u16(type, data, size, &pdo->event_time);
+					canopen_debug("txpdo[%d].event_time = %08x\n", pdo_id, pdo->event_time);
 					break;
 			}
 		} else if(0x1A0000 == (id & 0xff8000)){
@@ -1091,10 +1114,13 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 				goto done;
 			}
 			struct canopen_pdo_entry *pdo = &self->profile.txpdo[pdo_id];
-			if(sub == 0)
+			if(sub == 0){
 				regmap_mem_to_u8(type, data, size, &pdo->map_entries);
-			else
+				canopen_debug("txpdo[%d].map_entries = %08x\n", pdo_id, pdo->map_entries);
+			} else {
 				regmap_mem_to_u32(type, data, size, &pdo->map[sub - 1]);
+				canopen_debug("txpdo[%d].map[%d] = %04x\n", pdo_id, sub - 1, pdo->map[sub-1]);
+			}
 		}
 	} else {
 		ret = -ENOENT;
@@ -1276,11 +1302,17 @@ int canopen_sdo_read(struct canopen *self, uint8_t node_id, uint32_t dict, void 
 		case 2: tmsg.data[0] = CANOPEN_SDO_CMD_READ2; break;
 		case 3: tmsg.data[0] = CANOPEN_SDO_CMD_READ3; break;
 		case 4: tmsg.data[0] = CANOPEN_SDO_CMD_READ4; break;
-		default: return -CANOPEN_SDO_ERR_LEN_HIGH;
+		default: {
+			thread_mutex_unlock(&self->sdo.mx);
+			return -CANOPEN_SDO_ERR_LEN_HIGH;
+		}
 	};
 	u16_to_co16((uint16_t)(dict >> 8), &tmsg.data[1]);
 	tmsg.data[3] = (uint8_t)(dict & 0xff);
+
+	canopen_debug("SDO read %06x on %02x\n", dict, node_id);
 	if(can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT) < 0){
+		self->sdo.req.running = false;
 		thread_mutex_unlock(&self->sdo.mx);
 		return -EIO;
 	}
@@ -1314,7 +1346,10 @@ int canopen_sdo_write(struct canopen *self, uint8_t node_id, uint32_t dict, cons
 		case 2: tmsg.data[0] = CANOPEN_SDO_CMD_WRITE2; break;
 		case 3: tmsg.data[0] = CANOPEN_SDO_CMD_WRITE3; break;
 		case 4: tmsg.data[0] = CANOPEN_SDO_CMD_WRITE4; break;
-		default: return -EINVAL;
+		default: {
+			thread_mutex_unlock(&self->sdo.mx);
+			return -EINVAL;
+		}
 	}
 	u16_to_co16((uint16_t)(dict >> 8), &tmsg.data[1]);
 	tmsg.data[3] = (uint8_t)(dict & 0xff);
@@ -1327,6 +1362,7 @@ int canopen_sdo_write(struct canopen *self, uint8_t node_id, uint32_t dict, cons
 	self->sdo.req.result = -1;
 	self->sdo.req.running = true;
 
+	canopen_debug("SDO write %06x on %02x\n", dict, node_id);
 	if(can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT) < 0){
 		thread_mutex_unlock(&self->sdo.mx);
 		return -EIO;
@@ -1489,36 +1525,39 @@ int canopen_sdo_read_serial(struct canopen *self, uint8_t node_id, struct canope
 }
 #endif
 
-static int _canopen_pdo_configure(struct canopen *self, uint32_t base, uint8_t node_id, const struct canopen_pdo_config *conf){
+static int _canopen_pdo_configure(memory_device_t mem, uint32_t base, uint8_t node_id, const struct canopen_pdo_config *conf){
 	int ret = 0;
 	uint32_t index = (uint32_t)conf->index << 8;
 	uint8_t num_entries = 0;
+	base = ((uint32_t)node_id << 24) | (base & 0xffffff);
 
 	// read number of entries in the table
-	if((ret = canopen_sdo_read_u8(self, node_id, (uint32_t)(base + index), &num_entries)) < 0){
+	if((ret = memory_read(mem, base + index, &num_entries, 1)) < 0){
 		return ret;
 	}
 
 	// disable tx pdo
-	if((ret = canopen_sdo_write_u32(self, node_id, (uint32_t)(base + index + 1), conf->cob_id | CANOPEN_PDO_DISABLED)) < 0){
+	uint32_t _u32 = conf->cob_id | CANOPEN_PDO_DISABLED;
+	if((ret = memory_write(mem, base + index + 1, &_u32, sizeof(_u32))) < 0){
 		return ret;
 	}
 
 	// update pdo type
-	if((ret = canopen_sdo_write_u8(self, node_id, (uint32_t)(base + index + 2), conf->type)) < 0){
+	if((ret = memory_write(mem, base + index + 2, &conf->type, 1)) < 0){
 		return ret;
 	}
 
-	if(num_entries > 2 && (ret = canopen_sdo_write_u16(self, node_id, (uint32_t)(base + index + 3), conf->inhibit_time)) < 0){
+	if(num_entries > 2 && (ret = memory_write(mem, base + index + 3, &conf->inhibit_time, sizeof(uint16_t))) < 0){
 		return ret;
 	}
 
-	if(num_entries > 4 && (ret = canopen_sdo_write_u16(self, node_id, (uint32_t)(base + index + 5), conf->event_time)) < 0){
+	if(num_entries > 4 && (ret = memory_write(mem, base + index + 5, &conf->event_time, sizeof(uint16_t))) < 0){
 		return ret;
 	}
 
 	// disable mapping first
-	if((ret = canopen_sdo_write_u8(self, node_id, (uint32_t)(base + 0x020000 + index), 0)) < 0){
+	_u32 = 0;
+	if((ret = memory_write(mem, base + 0x020000 + index, &_u32, 1)) < 0){
 		return ret;
 	}
 
@@ -1526,24 +1565,25 @@ static int _canopen_pdo_configure(struct canopen *self, uint32_t base, uint8_t n
 	for(size_t c = 0; c < (sizeof(conf->map) / sizeof(conf->map[0])); c++){
 		if(conf->map[c] == 0) break;
 		// write mapping of the tx pdo
-		if((ret = canopen_sdo_write_u32(self, node_id, (uint32_t)(base + 0x020000 + index + c + 1), conf->map[c])) < 0){
+		if((ret = memory_write(mem, base + 0x020000 + index + c + 1, &conf->map[c], 4)) < 0){
 			return ret;
 		}
 		num++;
 	}
 
 	// write number of mapping entries
-	if((ret = canopen_sdo_write_u8(self, node_id, (uint32_t)(base + 0x020000 + index), num)) < 0){
+	if((ret = memory_write(mem, base + 0x020000 + index, &num, 1)) < 0){
 		return ret;
 	}
 
 	// enable the tx pdo and set cob id
-	if((ret = canopen_sdo_write_u32(self, node_id, (uint32_t)(base + index + 1), conf->cob_id)) < 0){
+	if((ret = memory_write(mem, base + index + 1, &conf->cob_id, 4)) < 0){
 		return ret;
 	}
-	return ret;
-}
 
+	return 0;
+}
+/*
 int canopen_pdo_tx_local(struct canopen *self, const struct canopen_pdo_config *conf){
 	size_t max_entries = CANOPEN_DEFAULT_TXPDO_COUNT;
 	size_t max_map = CANOPEN_DEFAULT_PDO_MAP_COUNT;
@@ -1583,13 +1623,13 @@ int canopen_pdo_rx_local(struct canopen *self, const struct canopen_pdo_config *
 	e->cob_id = conf->cob_id;
 	return 0;
 }
-
-int canopen_pdo_rx(struct canopen *self, uint8_t node_id, const struct canopen_pdo_config *conf){
+*/
+int canopen_pdo_rx(memory_device_t self, uint8_t node_id, const struct canopen_pdo_config *conf){
 	//if(self->mode != CANOPEN_MASTER) return -1;
 	return _canopen_pdo_configure(self, 0x140000, node_id, conf);
 }
 
-int canopen_pdo_tx(struct canopen *self, uint8_t node_id, const struct canopen_pdo_config *conf){
+int canopen_pdo_tx(memory_device_t self, uint8_t node_id, const struct canopen_pdo_config *conf){
 	//if(self->mode != CANOPEN_MASTER) return -1;
 	return _canopen_pdo_configure(self, 0x180000, node_id, conf);
 }
@@ -1671,12 +1711,36 @@ const char *canopen_strerror(int32_t err){
 
 static int _memory_read(memory_device_t dev, size_t offset, void *data, size_t size){
 	struct canopen *self = container_of(dev, struct canopen, mem.ops);
-	return canopen_sdo_read(self, (uint8_t)(((uint32_t)offset) >> 24), offset & 0xffffff, data, size);
+	uint8_t node_id = (uint8_t)(((uint32_t)offset) >> 24);
+	uint32_t ofs = offset & 0xffffff;
+	if(node_id == self->address){
+		canopen_debug("memread local: %08x\n", ofs);
+		switch(size){
+			case 1: return regmap_read(self->regmap, ofs, REG_UINT8, data, size);
+			case 2: return regmap_read(self->regmap, ofs, REG_UINT16, data, size);
+			case 4: return regmap_read(self->regmap, ofs, REG_UINT32, data, size);
+			default:
+				return -EINVAL;
+		}
+	}
+	return canopen_sdo_read(self, node_id, ofs, data, size);
 }
 
 static int _memory_write(memory_device_t dev, size_t offset, const void *data, size_t size){
 	struct canopen *self = container_of(dev, struct canopen, mem.ops);
-	return canopen_sdo_write(self, (uint8_t)(((uint32_t)offset) >> 24), offset & 0xffffff, data, size);
+	uint8_t node_id = (uint8_t)(((uint32_t)offset) >> 24);
+	uint32_t ofs = offset & 0xffffff;
+	if(node_id == self->address){
+		canopen_debug("memwrite local: %08x\n", ofs);
+		switch(size){
+			case 1: return regmap_write(self->regmap, ofs, REG_UINT8, data, size);
+			case 2: return regmap_write(self->regmap, ofs, REG_UINT16, data, size);
+			case 4: return regmap_write(self->regmap, ofs, REG_UINT32, data, size);
+			default:
+				return -EINVAL;
+		}
+	}
+	return canopen_sdo_write(self, node_id, ofs, data, size);
 }
 
 static struct memory_device_ops _memory_ops = {
@@ -1709,14 +1773,13 @@ int _canopen_probe(void *fdt, int fdt_node){
 	self->mode = mode;
 	self->regmap = regmap;
 	self->address = address;
+	self->profile.sync_cob_id = sync_cob_id;
 	INIT_LIST_HEAD(&self->emcy_listeners);
 
 	if(mode == CANOPEN_MASTER && sync_interval){
 		printk(PRINT_INFO "canopen: using sync interval %dms\n", sync_interval);
 		_canopen_set_sync_period(self, sync_interval);
 	}
-
-	self->profile.sync_cob_id = sync_cob_id;
 
 	regmap_range_init(&self->comm_range, CANOPEN_COMM_RANGE_START, CANOPEN_COMM_RANGE_END, &_comm_range_ops);
 	regmap_add(self->regmap, &self->comm_range);
@@ -1769,13 +1832,10 @@ int _canopen_probe(void *fdt, int fdt_node){
 	memory_device_init(&self->mem, fdt, fdt_node, &_memory_ops);
 	memory_device_register(&self->mem);
 
-	thread_create(_canopen_tx, "cano_tx", 230, self, 3, &self->task);
+	thread_create(_canopen_tx, "cano_tx", 550, self, 3, &self->task);
 
 	printk(PRINT_SUCCESS "canopen: ready\n");
-	// start the work scheduler
-	//work_init(&self->work, _service_runner);
-	//queue_work(&self->work, 0);
-	
+
 	return 0;
 }
 

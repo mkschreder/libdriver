@@ -90,7 +90,7 @@ static int strtokenize(char *buf, size_t len, char *tokens[], uint8_t ntokens){
 	return tok;
 }
 
-static int _console_printf(console_t dev, const char *fmt, ...){
+static int _console_printf(console_device_t dev, const char *fmt, ...){
 	struct console *self = container_of(dev, struct console, dev.ops);
 
 	// lock printf buffer
@@ -285,7 +285,7 @@ static int con_readline(struct console *self, char *line, size_t size){
 	return pos;
 }
 
-static void _console_task(void *ptr){
+static void _console_device_task(void *ptr){
 	struct console *self = (struct console*)ptr;
 
 	while(1){
@@ -358,7 +358,7 @@ static void _console_task(void *ptr){
 	}
 }
 
-static int _console_add_command(console_t dev, struct console_command *cmd){
+static int _console_add_command(console_device_t dev, struct console_command *cmd){
 	struct console *self = container_of(dev, struct console, dev.ops);
 	thread_mutex_lock(&self->lock);
 	list_add_tail(&cmd->list, &self->commands);
@@ -366,7 +366,7 @@ static int _console_add_command(console_t dev, struct console_command *cmd){
 	return 0;
 }
 
-static const struct console_ops _console_ops = {
+static const struct console_device_ops _console_ops = {
 	.add_command = _console_add_command,
 	.printf = _console_printf
 };
@@ -387,14 +387,16 @@ int _console_probe(void *fdt, int fdt_node){
 		return -EINVAL;
 	}
 
-	console_init(&self->dev, fdt, fdt_node, &_console_ops);
 	self->serial = serial;
 	self->vardir = vardir;
 	INIT_LIST_HEAD(&self->commands);
 	thread_mutex_init(&self->lock);
 
+	console_device_init(&self->dev, fdt, fdt_node, &_console_ops);
+	console_device_register(&self->dev);
+
 	if(thread_create(
-		  _console_task,
+		  _console_device_task,
 		  "shell",
 		  620,
 		  self,
@@ -405,9 +407,7 @@ int _console_probe(void *fdt, int fdt_node){
     } else {
         printk("con: started!\n");
     }
-
-	console_register(&self->dev);
-    return 0;
+	return 0;
 }
 
 int _console_remove(void *fdt, int fdt_node){

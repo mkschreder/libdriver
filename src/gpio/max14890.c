@@ -123,7 +123,12 @@ static int _max14890_probe(void *fdt, int fdt_node){
 	_max14890_cmd(self,
 		MAX14890_CMD_WRITE_CONFIG |
 		MAX14890_MODEA_TTL |
-		MAX14890_MODEB_TTL, &status);
+		MAX14890_MODEB_TTL |
+		MAX14890_MODEZ_TTL |
+		MAX14890_MODEY_TTL |
+		MAX14890_MODED2_TTL |
+		MAX14890_MODED3_TTL
+	, &status);
 
 	_max14890_cmd(self,
 		MAX14890_CMD_FAULT_STATUS, &status);

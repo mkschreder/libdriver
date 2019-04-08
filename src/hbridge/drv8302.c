@@ -47,7 +47,7 @@ struct drv8302 {
 	adc_device_t adc;
 };
 
-static int _drv8302_cmd(console_t con, void *userptr, int argc, char **argv){
+static int _drv8302_cmd(console_device_t con, void *userptr, int argc, char **argv){
 	struct drv8302 *self = (struct drv8302*)userptr;
 	if(argc == 5 && strcmp(argv[1], "out") == 0){
 		float va = constrain_float((float)atof(argv[2]), 0.0f, 1.0f);
@@ -106,7 +106,7 @@ int _drv8302_probe(void *fdt, int fdt_node){
 	self->pwm = pwm;
 	self->adc = adc;
 
-	console_t console = console_find_by_ref(fdt, fdt_node, "console");
+	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 	if(console){
 		char name[32];
 		static int instances = 0;
