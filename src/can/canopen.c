@@ -63,6 +63,8 @@
 #define canopen_msg_get_cob(msg) ((msg)->id & (uint32_t)~(uint32_t)0x7f)
 #define CANOPEN_MIN_SYNC_PERIOD_US 1000
 
+#define CANOPEN_INTERNAL_REG_EVENT 0x01
+
 struct canopen_pdo_entry {
 	uint32_t cob_id;
 	uint8_t type;
@@ -294,6 +296,30 @@ static void u32_to_co32(uint32_t val, uint8_t *data){
 	data[1] = (uint8_t)(val >> 8);
 	data[2] = (uint8_t)(val >> 16);
 	data[3] = (uint8_t)(val >> 24);
+}
+
+static int _canopen_send_event(struct canopen *self, canopen_node_event_t ev){
+	struct can_message msg;
+	can_message_init(&msg);
+	msg.id = (uint32_t)(CANOPEN_COB_NMT_MON | self->address);
+	msg.data[0] = (uint8_t)ev;
+	msg.len = 1;
+	if(can_send(self->port, &msg, CANOPEN_CAN_TX_TIMEOUT) < 0){
+		return -EIO;
+	}
+	return 0;
+}
+
+static int _canopen_send_sync(struct canopen *self){
+	if(self->mode != CANOPEN_MASTER) return -EPERM;
+	struct can_message msg;
+	can_message_init(&msg);
+	msg.id = (self->profile.sync_cob_id)?self->profile.sync_cob_id:CANOPEN_COB_SYNC_OR_EMCY;
+	msg.len = 0;
+	if(can_send(self->port, &msg, CANOPEN_CAN_TX_TIMEOUT) < 0) {
+		return -EIO;
+	}
+	return 0;
 }
 
 int canopen_lss_reset(struct canopen *self){
@@ -889,15 +915,7 @@ static void _canopen_handle_message(struct can_listener *listener, can_device_t 
 	}
 }
 
-int canopen_send_sync(struct canopen *self){
-	if(self->mode != CANOPEN_MASTER) return -EPERM;
-	struct can_message msg;
-	can_message_init(&msg);
-	msg.id = (self->profile.sync_cob_id)?self->profile.sync_cob_id:CANOPEN_COB_SYNC_OR_EMCY;
-	msg.len = 0;
-	if(can_send(self->port, &msg, CANOPEN_CAN_TX_TIMEOUT) < 0) return -EIO;
-	return 0;
-}
+
 
 //static void _service_runner(struct work *work){
 static void _service_runner(struct canopen *self){
@@ -925,7 +943,7 @@ static void _service_runner(struct canopen *self){
 		uint32_t period = constrain_u32(self->profile.cycle_period, CANOPEN_MIN_SYNC_PERIOD_US, 0xffffffff);
 		self->sync_timeout = t + period - CANOPEN_MIN_SYNC_PERIOD_US;
 
-		canopen_send_sync(self);
+		_canopen_send_sync(self);
 
 		//canopen_debug("send sync pdos at %02x, type %d\n", self->address, self->mode);
 		// send any local pdos that we have configured on the master
@@ -939,6 +957,9 @@ static void _service_runner(struct canopen *self){
 static void _canopen_tx(void *ptr){
 	struct canopen *self = (struct canopen*)ptr;
 	uint32_t t = thread_ticks_count();
+
+	_canopen_send_event(self, CANOPEN_EV_OPERATIONAL);
+
 	while(1){
 		_service_runner(self);
 		if(thread_sem_take_wait(&self->quit, 0) == 0){
@@ -1318,13 +1339,16 @@ int canopen_sdo_read(struct canopen *self, uint8_t node_id, uint32_t dict, void 
 	}
 
 	// wait until the request either completes or fails
-	while(self->sdo.req.running){
-		thread_sem_take(&self->sdo.req.done);
+	int r = thread_sem_take_wait(&self->sdo.req.done, CANOPEN_CAN_TX_TIMEOUT);
+	if(r < 0){
+		self->sdo.req.running = false;
+		thread_mutex_unlock(&self->sdo.mx);
+		return r;
 	}
 
 	self->sdo.req.running = false;
 
-	int r = self->sdo.req.result;
+	r = self->sdo.req.result;
 
 	// release the lss subsystem
 	thread_mutex_unlock(&self->sdo.mx);
@@ -1369,9 +1393,10 @@ int canopen_sdo_write(struct canopen *self, uint8_t node_id, uint32_t dict, cons
 	}
 
 	// wait until the request either completes or fails
-	while(self->sdo.req.running){
-		thread_sem_take(&self->sdo.req.done);
+	if(thread_sem_take_wait(&self->sdo.req.done, CANOPEN_CAN_TX_TIMEOUT) < 0){
+		self->sdo.req.result = -ETIMEDOUT;
 	}
+
 	self->sdo.req.running = false;
 
 	int r = self->sdo.req.result;
@@ -1715,12 +1740,16 @@ static int _memory_read(memory_device_t dev, size_t offset, void *data, size_t s
 	uint32_t ofs = offset & 0xffffff;
 	if(node_id == self->address){
 		canopen_debug("memread local: %08x\n", ofs);
-		switch(size){
-			case 1: return regmap_read(self->regmap, ofs, REG_UINT8, data, size);
-			case 2: return regmap_read(self->regmap, ofs, REG_UINT16, data, size);
-			case 4: return regmap_read(self->regmap, ofs, REG_UINT32, data, size);
-			default:
-				return -EINVAL;
+		if(ofs < 0xff){ // internal registers
+
+		} else {
+			switch(size){
+				case 1: return regmap_read(self->regmap, ofs, REG_UINT8, data, size);
+				case 2: return regmap_read(self->regmap, ofs, REG_UINT16, data, size);
+				case 4: return regmap_read(self->regmap, ofs, REG_UINT32, data, size);
+				default:
+					return -EINVAL;
+			}
 		}
 	}
 	return canopen_sdo_read(self, node_id, ofs, data, size);
@@ -1732,12 +1761,20 @@ static int _memory_write(memory_device_t dev, size_t offset, const void *data, s
 	uint32_t ofs = offset & 0xffffff;
 	if(node_id == self->address){
 		canopen_debug("memwrite local: %08x\n", ofs);
-		switch(size){
-			case 1: return regmap_write(self->regmap, ofs, REG_UINT8, data, size);
-			case 2: return regmap_write(self->regmap, ofs, REG_UINT16, data, size);
-			case 4: return regmap_write(self->regmap, ofs, REG_UINT32, data, size);
-			default:
-				return -EINVAL;
+		if(ofs < 0xff){ // internal registers
+			switch(ofs){
+				case CANOPEN_INTERNAL_REG_EVENT: {
+					_canopen_send_event(self, *(char*)data);
+				} break;
+			}
+		} else {
+			switch(size){
+				case 1: return regmap_write(self->regmap, ofs, REG_UINT8, data, size);
+				case 2: return regmap_write(self->regmap, ofs, REG_UINT16, data, size);
+				case 4: return regmap_write(self->regmap, ofs, REG_UINT32, data, size);
+				default:
+					return -EINVAL;
+			}
 		}
 	}
 	return canopen_sdo_write(self, node_id, ofs, data, size);
@@ -1747,6 +1784,11 @@ static struct memory_device_ops _memory_ops = {
 	.read = _memory_read,
 	.write = _memory_write
 };
+
+int canopen_send_event(memory_device_t canopen_mem, canopen_node_event_t ev){
+	uint8_t ev_ch = (uint8_t)ev;
+	return memory_write(canopen_mem, CANOPEN_INTERNAL_REG_EVENT, &ev_ch, 1);
+}
 
 int _canopen_probe(void *fdt, int fdt_node){
 	can_device_t can = can_find_by_ref(fdt, fdt_node, "can");
@@ -1775,6 +1817,8 @@ int _canopen_probe(void *fdt, int fdt_node){
 	self->address = address;
 	self->profile.sync_cob_id = sync_cob_id;
 	INIT_LIST_HEAD(&self->emcy_listeners);
+
+	_canopen_send_event(self, CANOPEN_EV_BOOTING);
 
 	if(mode == CANOPEN_MASTER && sync_interval){
 		printk(PRINT_INFO "canopen: using sync interval %dms\n", sync_interval);

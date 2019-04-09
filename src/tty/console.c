@@ -109,6 +109,11 @@ static int _console_printf(console_device_t dev, const char *fmt, ...){
 	return r;
 }
 
+static int _console_read(console_device_t dev, char *data, size_t size, uint32_t timeout){
+	struct console *self = container_of(dev, struct console, dev.ops);
+	return serial_read(self->serial, data, size, timeout);
+}
+
 #if !defined(__linux__)
 #if 0
 #include <FreeRTOS.h>
@@ -368,8 +373,19 @@ static int _console_add_command(console_device_t dev, struct console_command *cm
 
 static const struct console_device_ops _console_ops = {
 	.add_command = _console_add_command,
-	.printf = _console_printf
+	.printf = _console_printf,
+	.read = _console_read
 };
+
+static int _console_file_read(struct _reent *r, void *ptr, char *buf, int size){
+	struct console *self = (struct console*)ptr;
+	return serial_read(self->serial, buf, (size_t)size, THREAD_QUEUE_MAX_DELAY);
+}
+
+static int _console_file_write(struct _reent *r, void *ptr, const char *buf, int size){
+	struct console *self = (struct console*)ptr;
+	return serial_write(self->serial, buf, (size_t)size, CONSOLE_WRITE_TIMEOUT);
+}
 
 int _console_probe(void *fdt, int fdt_node){
 	struct console *self = kzmalloc(sizeof(struct console));

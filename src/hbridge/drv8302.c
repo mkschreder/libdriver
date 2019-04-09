@@ -115,6 +115,7 @@ int _drv8302_probe(void *fdt, int fdt_node){
 	}
 
 	gpio_set(self->gpio, PIN_EN_GATE);
+	gpio_reset(self->gpio, PIN_DC_CAL);
 
 	printk("drv8302: ready\n");
 
