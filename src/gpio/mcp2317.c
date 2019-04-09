@@ -200,7 +200,7 @@ static int _mcp2317_probe(void *fdt, int fdt_node){
 				);
 				_mcp2317_write_reg_bits(self, reg_gppu,
 						(uint8_t)(1 << idx),
-						(uint8_t)((options >> 1) & 1)
+						(uint8_t)(((options >> 1) & 1) << idx)
 				);
 				_mcp2317_write_reg_bits(self, reg_gpio,
 						(uint8_t)(1 << idx),

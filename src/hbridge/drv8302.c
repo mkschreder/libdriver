@@ -69,7 +69,7 @@ static int _drv8302_cmd(console_device_t con, void *userptr, int argc, char **ar
 			//adc_trigger(self->adc);
 			thread_sleep_ms(200);
 			for(unsigned int c = 0; c < 16; c++){
-				int16_t val = 0;
+				uint16_t val = 0;
 				adc_read(self->adc, c, &val);
 				console_printf(con, "%05d ", val);
 			}
