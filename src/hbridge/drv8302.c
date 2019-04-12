@@ -31,6 +31,9 @@
 #include <libfirmware/analog.h>
 #include <libfirmware/math.h>
 #include <libfirmware/adc.h>
+#include <libfirmware/memory.h>
+
+#include "hbridge/drv8302.h"
 
 #include <libfdt/libfdt.h>
 
@@ -45,6 +48,8 @@ struct drv8302 {
 	gpio_device_t gpio;
 	analog_device_t pwm;
 	adc_device_t adc;
+
+	struct memory_device mem;
 };
 
 static int _drv8302_cmd(console_device_t con, void *userptr, int argc, char **argv){
@@ -60,26 +65,140 @@ static int _drv8302_cmd(console_device_t con, void *userptr, int argc, char **ar
 	} else if(argc == 2 && strcmp(argv[1], "reset") == 0) {
 		gpio_reset(self->gpio, PIN_EN_GATE);
 		gpio_set(self->gpio, PIN_EN_GATE);
-	} else if(argc == 2 && strcmp(argv[1], "adc") == 0) {
-		if(!self->adc){
-			console_printf(con, "drv8302: adc not available\n");
-			return -1;
+	} else if(argc >= 2 && strcmp(argv[1], "dccal") == 0){
+		if(argc != 3){
+			console_printf(con, PRINT_ERROR "usage: dccal <on|off>\n");
+			return -EINVAL;
 		}
-		for(int j = 0; j < 100; j++){
-			//adc_trigger(self->adc);
-			thread_sleep_ms(200);
-			for(unsigned int c = 0; c < 16; c++){
-				uint16_t val = 0;
-				adc_read(self->adc, c, &val);
-				console_printf(con, "%05d ", val);
-			}
-			console_printf(con, "\r");
+		if(strcmp(argv[2], "on") == 0){
+			gpio_set(self->gpio, PIN_DC_CAL);
+		} else if(strcmp(argv[2], "off") == 0){
+			gpio_reset(self->gpio, PIN_DC_CAL);
+		} else {
+			console_printf(con, PRINT_ERROR "invalid argument\n");
+			return -EINVAL;
+		}
+	} else if(argc >= 2 && strcmp(argv[1], "dcgain") == 0) {
+		if(argc != 3){
+			console_printf(con, PRINT_ERROR "Specify gain 10 or 40\n");
+			return -EINVAL;
+		}
+		if(strcmp(argv[2], "40") == 0){
+			gpio_set(self->gpio, PIN_GAIN);
+		} else if(strcmp(argv[1], "10") == 0){
+			gpio_reset(self->gpio, PIN_GAIN);
+		} else {
+			console_printf(con, PRINT_ERROR "Only 10 or 40 are valid options!\n");
 		}
 	} else {
 		console_printf(con, "Unknown action\n");
 	}
 	return 0;
 }
+
+enum {
+	DRV8302_OFS_DC_CAL,
+	DRV8302_OFS_OC_MODE,
+	DRV8302_OFS_FAULT,
+	DRV8302_OFS_OCW,
+	DRV8302_OFS_GAIN,
+	DRV8302_OFS_ENABLE
+};
+
+void drv8302_enable_calibration(drv8302_t dev, bool en){
+	uint8_t r = (uint8_t)en;
+	memory_write((memory_device_t)dev, DRV8302_OFS_DC_CAL, &r, 1);
+}
+
+void drv8302_set_oc_mode(drv8302_t dev, drv8302_oc_mode_t mode){
+	uint8_t r = (uint8_t)mode;
+	memory_write((memory_device_t)dev, DRV8302_OFS_OC_MODE, &r, 1);
+}
+
+void drv8302_enable(drv8302_t dev, bool en){
+	uint8_t r = (uint8_t)en;
+	memory_write((memory_device_t)dev, DRV8302_OFS_ENABLE, &r, 1);
+}
+
+void drv8302_set_gain(drv8302_t dev, drv8302_gain_t gain){
+	uint8_t r = (uint8_t)gain;
+	memory_write((memory_device_t)dev, DRV8302_OFS_GAIN, &r, 1);
+}
+
+bool drv8302_is_in_error(drv8302_t dev){
+	uint8_t r = 0;
+	memory_read((memory_device_t)dev, DRV8302_OFS_FAULT, &r, 1);
+	return (bool)r;
+}
+
+bool drv8302_is_in_overcurrent(drv8302_t dev){
+	uint8_t r = 0;
+	memory_read((memory_device_t)dev, DRV8302_OFS_OCW, &r, 1);
+	return (bool)r;
+}
+
+int drv8302_get_gain(drv8302_t dev){
+	uint8_t r = 0;
+	memory_read((memory_device_t)dev, DRV8302_OFS_GAIN, &r, 1);
+	if(r == DRV8302_GAIN_10V) return 10;
+	return 40;
+}
+
+static int _drv8302_read(memory_device_t dev, size_t offs, void *data, size_t size){
+	struct drv8302 *self = container_of(dev, struct drv8302, mem.ops);
+
+	if(size != 1) return -EINVAL;
+	switch(offs){
+		case DRV8302_OFS_FAULT: *(uint8_t*)data = gpio_read(self->gpio, PIN_FAULT); break;
+		case DRV8302_OFS_OCW: *(uint8_t*)data = gpio_read(self->gpio, PIN_OCW); break;
+		case DRV8302_OFS_GAIN: *(uint8_t*)data = gpio_read(self->gpio, PIN_GAIN); break;
+	}
+	return 1;
+}
+
+static int _drv8302_write(memory_device_t dev, size_t offs, const void *data, size_t size){
+	struct drv8302 *self = container_of(dev, struct drv8302, mem.ops);
+
+	if(size != 1) return -EINVAL;
+	switch(offs){
+		case DRV8302_OFS_DC_CAL: {
+			if(*(uint8_t*)data){
+				gpio_set(self->gpio, PIN_DC_CAL);
+			} else {
+				gpio_reset(self->gpio, PIN_DC_CAL);
+			}
+		} break;
+		case DRV8302_OFS_OC_MODE: {
+			drv8302_oc_mode_t mode = *(uint8_t*)data;
+			if(mode == DRV8302_OC_MODE_CYCLE_BY_CYCLE){
+				gpio_reset(self->gpio, PIN_MOC);
+			} else if(mode == DRV8302_OC_MODE_SHUTDOWN){
+				gpio_set(self->gpio, PIN_MOC);
+			}
+		} break;
+		case DRV8302_OFS_ENABLE: {
+			if(*(uint8_t*)data){
+				gpio_set(self->gpio, PIN_EN_GATE);
+			} else {
+				gpio_reset(self->gpio, PIN_EN_GATE);
+			}
+		} break;
+		case DRV8302_OFS_GAIN: {
+			drv8302_gain_t gain = *(uint8_t*)data;
+			if(gain == DRV8302_GAIN_10V){
+				gpio_reset(self->gpio, PIN_GAIN);
+			} else if(gain == DRV8302_GAIN_40V){
+				gpio_set(self->gpio, PIN_GAIN);
+			}
+		} break;
+	}
+	return 1;
+}
+
+static struct memory_device_ops _memory_ops = {
+	.read = _drv8302_read,
+	.write = _drv8302_write
+};
 
 int _drv8302_probe(void *fdt, int fdt_node){
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
@@ -96,7 +215,7 @@ int _drv8302_probe(void *fdt, int fdt_node){
 		return -1;
 	}
 
-	if(!pwm){
+	if(!adc){
 		printk("drv8302: adc invalid\n");
 		return -1;
 	}
@@ -116,6 +235,10 @@ int _drv8302_probe(void *fdt, int fdt_node){
 
 	gpio_set(self->gpio, PIN_EN_GATE);
 	gpio_reset(self->gpio, PIN_DC_CAL);
+	gpio_reset(self->gpio, PIN_GAIN); // 0 = 10V, 1 = 40V
+
+	memory_device_init(&self->mem, fdt, fdt_node, &_memory_ops);
+	memory_device_register(&self->mem);
 
 	printk("drv8302: ready\n");
 
