@@ -91,7 +91,7 @@ static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *d
 	return -1;
 }
 
-static struct analog_device_ops _analog_ops = {
+static struct analog_device_ops _lp55231_analog_ops = {
 	.write = _lp55231_analog_write,
 	.read = _lp55231_analog_read
 };
@@ -132,7 +132,7 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 		_lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + c), 0x80);
 	}
 
-	analog_device_init(&self->analog_dev, fdt, fdt_node, &_analog_ops);
+	analog_device_init(&self->analog_dev, fdt, fdt_node, &_lp55231_analog_ops);
 	analog_device_register(&self->analog_dev);
 
 	printk("lp55231: ready (addr %02x)\n", addr);

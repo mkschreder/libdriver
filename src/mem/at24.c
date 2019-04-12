@@ -23,7 +23,6 @@ struct at24 {
 static int _at24_read(memory_device_t dev, size_t offset, void *data, size_t size){
     if(!dev) return -EINVAL;
     struct at24 *self = container_of(dev, struct at24, dev.ops);
-    //return i2c_read16_buf(self->i2c, self->addr, (uint16_t)offset, data, size);
     return i2c_read8_buf(self->i2c, self->addr, (uint8_t)offset, data, size);
 }
 
@@ -45,7 +44,7 @@ static int _at24_write(memory_device_t dev, size_t offset, const void *data, siz
     return (int)(_size - size);
 }
 
-static struct memory_device_ops _memory_ops = {
+static struct memory_device_ops _at24_memory_ops = {
     .read = _at24_read,
     .write = _at24_write
 };
@@ -68,7 +67,7 @@ static int _at24_probe(void *fdt, int fdt_node) {
 	self->addr = addr;
 	self->i2c = i2c;
 
-	memory_device_init(&self->dev, fdt, fdt_node, &_memory_ops);
+	memory_device_init(&self->dev, fdt, fdt_node, &_at24_memory_ops);
 	memory_device_register(&self->dev);
 
 	printk("at24: ready (addr %02x)\n", addr);
@@ -77,7 +76,11 @@ static int _at24_probe(void *fdt, int fdt_node) {
 }
 
 static int _at24_remove(void *fdt, int fdt_node) {
-	return -1;
+	memory_device_t mem = memory_find_by_node(fdt, fdt_node);
+	if(!mem) return -1;
+	struct at24 *self = container_of(mem, struct at24, dev.ops);
+	kfree(self);
+	return 0;
 }
 
 DEVICE_DRIVER(at24, "fw,at24", _at24_probe, _at24_remove)

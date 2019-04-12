@@ -86,7 +86,7 @@ static int _mcp4461_analog_read(analog_device_t dev, unsigned int chan, float *v
 	return -1;
 }
 
-static struct analog_device_ops _analog_ops = {
+static struct analog_device_ops _mcp4461_analog_ops = {
 	.write = _mcp4461_analog_write,
 	.read = _mcp4461_analog_read
 };
@@ -138,7 +138,7 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 		return -1;
 	}
 
-	analog_device_init(&self->dev, fdt, fdt_node, &_analog_ops);
+	analog_device_init(&self->dev, fdt, fdt_node, &_mcp4461_analog_ops);
 	analog_device_register(&self->dev);
 
 	printk("mcp4461: ready (addr %02x)\n", addr);

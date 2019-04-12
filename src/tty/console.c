@@ -213,7 +213,7 @@ static int _cmd_get(struct console *con, int argc, char **argv){
 		return -1;
 	}
 
-	static char buf[16];
+	char buf[16];
 
 	int ret = 0;
 	if((ret = vardir_get(con->vardir, 0, argv[1], VAR_STRING, buf, sizeof(buf))) >= 0){
