@@ -137,14 +137,21 @@ am__v_AR_1 =
 libdriver_a_AR = $(AR) $(ARFLAGS)
 libdriver_a_DEPENDENCIES =
 am__dirstamp = $(am__leading_dot)dirstamp
-am_libdriver_a_OBJECTS = accgyro/mpu6500.$(OBJEXT) \
-	analog/lp55231.$(OBJEXT) analog/mcp4461.$(OBJEXT) \
-	baro/bmp280.$(OBJEXT) can/canopen.$(OBJEXT) \
-	disp/ili9340.$(OBJEXT) disp/ledpanel.$(OBJEXT) \
-	gpio/mcp2317.$(OBJEXT) gpio/max14890.$(OBJEXT) \
-	hbridge/drv8302.$(OBJEXT) mem/at24.$(OBJEXT) \
-	pointer/pmw3360.$(OBJEXT) pointer/adns3080.$(OBJEXT) \
-	usb/usbd_cdc.$(OBJEXT) tty/console.$(OBJEXT) vardir.$(OBJEXT)
+am_libdriver_a_OBJECTS = accgyro/libdriver_a-mpu6500.$(OBJEXT) \
+	analog/libdriver_a-lp55231.$(OBJEXT) \
+	analog/libdriver_a-mcp4461.$(OBJEXT) \
+	baro/libdriver_a-bmp280.$(OBJEXT) \
+	can/libdriver_a-canopen.$(OBJEXT) \
+	disp/libdriver_a-ili9340.$(OBJEXT) \
+	disp/libdriver_a-ledpanel.$(OBJEXT) \
+	gpio/libdriver_a-mcp2317.$(OBJEXT) \
+	gpio/libdriver_a-max14890.$(OBJEXT) \
+	hbridge/libdriver_a-drv8302.$(OBJEXT) \
+	mem/libdriver_a-at24.$(OBJEXT) \
+	pointer/libdriver_a-pmw3360.$(OBJEXT) \
+	pointer/libdriver_a-adns3080.$(OBJEXT) \
+	usb/libdriver_a-usbd_cdc.$(OBJEXT) \
+	tty/libdriver_a-console.$(OBJEXT) libdriver_a-vardir.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -162,12 +169,12 @@ DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
 	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
@@ -358,6 +365,7 @@ libdriver_a_SOURCES = \
 	vardir.c
 
 libdriver_a_LIBADD = 
+libdriver_a_CFLAGS = -I$(top_srcdir)/include
 other_sources = \
     accgyro/adxl345.c\
     accgyro/l3g4200d.c\
@@ -463,7 +471,7 @@ accgyro/$(am__dirstamp):
 accgyro/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) accgyro/$(DEPDIR)
 	@: > accgyro/$(DEPDIR)/$(am__dirstamp)
-accgyro/mpu6500.$(OBJEXT): accgyro/$(am__dirstamp) \
+accgyro/libdriver_a-mpu6500.$(OBJEXT): accgyro/$(am__dirstamp) \
 	accgyro/$(DEPDIR)/$(am__dirstamp)
 analog/$(am__dirstamp):
 	@$(MKDIR_P) analog
@@ -471,9 +479,9 @@ analog/$(am__dirstamp):
 analog/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) analog/$(DEPDIR)
 	@: > analog/$(DEPDIR)/$(am__dirstamp)
-analog/lp55231.$(OBJEXT): analog/$(am__dirstamp) \
+analog/libdriver_a-lp55231.$(OBJEXT): analog/$(am__dirstamp) \
 	analog/$(DEPDIR)/$(am__dirstamp)
-analog/mcp4461.$(OBJEXT): analog/$(am__dirstamp) \
+analog/libdriver_a-mcp4461.$(OBJEXT): analog/$(am__dirstamp) \
 	analog/$(DEPDIR)/$(am__dirstamp)
 baro/$(am__dirstamp):
 	@$(MKDIR_P) baro
@@ -481,7 +489,7 @@ baro/$(am__dirstamp):
 baro/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) baro/$(DEPDIR)
 	@: > baro/$(DEPDIR)/$(am__dirstamp)
-baro/bmp280.$(OBJEXT): baro/$(am__dirstamp) \
+baro/libdriver_a-bmp280.$(OBJEXT): baro/$(am__dirstamp) \
 	baro/$(DEPDIR)/$(am__dirstamp)
 can/$(am__dirstamp):
 	@$(MKDIR_P) can
@@ -489,7 +497,7 @@ can/$(am__dirstamp):
 can/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) can/$(DEPDIR)
 	@: > can/$(DEPDIR)/$(am__dirstamp)
-can/canopen.$(OBJEXT): can/$(am__dirstamp) \
+can/libdriver_a-canopen.$(OBJEXT): can/$(am__dirstamp) \
 	can/$(DEPDIR)/$(am__dirstamp)
 disp/$(am__dirstamp):
 	@$(MKDIR_P) disp
@@ -497,9 +505,9 @@ disp/$(am__dirstamp):
 disp/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) disp/$(DEPDIR)
 	@: > disp/$(DEPDIR)/$(am__dirstamp)
-disp/ili9340.$(OBJEXT): disp/$(am__dirstamp) \
+disp/libdriver_a-ili9340.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
-disp/ledpanel.$(OBJEXT): disp/$(am__dirstamp) \
+disp/libdriver_a-ledpanel.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
 gpio/$(am__dirstamp):
 	@$(MKDIR_P) gpio
@@ -507,9 +515,9 @@ gpio/$(am__dirstamp):
 gpio/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) gpio/$(DEPDIR)
 	@: > gpio/$(DEPDIR)/$(am__dirstamp)
-gpio/mcp2317.$(OBJEXT): gpio/$(am__dirstamp) \
+gpio/libdriver_a-mcp2317.$(OBJEXT): gpio/$(am__dirstamp) \
 	gpio/$(DEPDIR)/$(am__dirstamp)
-gpio/max14890.$(OBJEXT): gpio/$(am__dirstamp) \
+gpio/libdriver_a-max14890.$(OBJEXT): gpio/$(am__dirstamp) \
 	gpio/$(DEPDIR)/$(am__dirstamp)
 hbridge/$(am__dirstamp):
 	@$(MKDIR_P) hbridge
@@ -517,7 +525,7 @@ hbridge/$(am__dirstamp):
 hbridge/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) hbridge/$(DEPDIR)
 	@: > hbridge/$(DEPDIR)/$(am__dirstamp)
-hbridge/drv8302.$(OBJEXT): hbridge/$(am__dirstamp) \
+hbridge/libdriver_a-drv8302.$(OBJEXT): hbridge/$(am__dirstamp) \
 	hbridge/$(DEPDIR)/$(am__dirstamp)
 mem/$(am__dirstamp):
 	@$(MKDIR_P) mem
@@ -525,16 +533,17 @@ mem/$(am__dirstamp):
 mem/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) mem/$(DEPDIR)
 	@: > mem/$(DEPDIR)/$(am__dirstamp)
-mem/at24.$(OBJEXT): mem/$(am__dirstamp) mem/$(DEPDIR)/$(am__dirstamp)
+mem/libdriver_a-at24.$(OBJEXT): mem/$(am__dirstamp) \
+	mem/$(DEPDIR)/$(am__dirstamp)
 pointer/$(am__dirstamp):
 	@$(MKDIR_P) pointer
 	@: > pointer/$(am__dirstamp)
 pointer/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) pointer/$(DEPDIR)
 	@: > pointer/$(DEPDIR)/$(am__dirstamp)
-pointer/pmw3360.$(OBJEXT): pointer/$(am__dirstamp) \
+pointer/libdriver_a-pmw3360.$(OBJEXT): pointer/$(am__dirstamp) \
 	pointer/$(DEPDIR)/$(am__dirstamp)
-pointer/adns3080.$(OBJEXT): pointer/$(am__dirstamp) \
+pointer/libdriver_a-adns3080.$(OBJEXT): pointer/$(am__dirstamp) \
 	pointer/$(DEPDIR)/$(am__dirstamp)
 usb/$(am__dirstamp):
 	@$(MKDIR_P) usb
@@ -542,7 +551,7 @@ usb/$(am__dirstamp):
 usb/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) usb/$(DEPDIR)
 	@: > usb/$(DEPDIR)/$(am__dirstamp)
-usb/usbd_cdc.$(OBJEXT): usb/$(am__dirstamp) \
+usb/libdriver_a-usbd_cdc.$(OBJEXT): usb/$(am__dirstamp) \
 	usb/$(DEPDIR)/$(am__dirstamp)
 tty/$(am__dirstamp):
 	@$(MKDIR_P) tty
@@ -550,7 +559,7 @@ tty/$(am__dirstamp):
 tty/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tty/$(DEPDIR)
 	@: > tty/$(DEPDIR)/$(am__dirstamp)
-tty/console.$(OBJEXT): tty/$(am__dirstamp) \
+tty/libdriver_a-console.$(OBJEXT): tty/$(am__dirstamp) \
 	tty/$(DEPDIR)/$(am__dirstamp)
 
 libdriver.a: $(libdriver_a_OBJECTS) $(libdriver_a_DEPENDENCIES) $(EXTRA_libdriver_a_DEPENDENCIES) 
@@ -575,22 +584,22 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vardir.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/mpu6500.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/lp55231.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/mcp4461.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/bmp280.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@can/$(DEPDIR)/canopen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ili9340.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/ledpanel.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/max14890.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/mcp2317.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@hbridge/$(DEPDIR)/drv8302.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/at24.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/adns3080.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/pmw3360.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/console.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@usb/$(DEPDIR)/usbd_cdc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libdriver_a-vardir.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@accgyro/$(DEPDIR)/libdriver_a-mpu6500.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/libdriver_a-lp55231.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@analog/$(DEPDIR)/libdriver_a-mcp4461.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@baro/$(DEPDIR)/libdriver_a-bmp280.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@can/$(DEPDIR)/libdriver_a-canopen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/libdriver_a-ili9340.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/libdriver_a-ledpanel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/libdriver_a-max14890.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/libdriver_a-mcp2317.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@hbridge/$(DEPDIR)/libdriver_a-drv8302.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/libdriver_a-at24.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-adns3080.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-pmw3360.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/libdriver_a-console.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@usb/$(DEPDIR)/libdriver_a-usbd_cdc.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -615,6 +624,230 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
+
+accgyro/libdriver_a-mpu6500.o: accgyro/mpu6500.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT accgyro/libdriver_a-mpu6500.o -MD -MP -MF accgyro/$(DEPDIR)/libdriver_a-mpu6500.Tpo -c -o accgyro/libdriver_a-mpu6500.o `test -f 'accgyro/mpu6500.c' || echo '$(srcdir)/'`accgyro/mpu6500.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) accgyro/$(DEPDIR)/libdriver_a-mpu6500.Tpo accgyro/$(DEPDIR)/libdriver_a-mpu6500.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='accgyro/mpu6500.c' object='accgyro/libdriver_a-mpu6500.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o accgyro/libdriver_a-mpu6500.o `test -f 'accgyro/mpu6500.c' || echo '$(srcdir)/'`accgyro/mpu6500.c
+
+accgyro/libdriver_a-mpu6500.obj: accgyro/mpu6500.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT accgyro/libdriver_a-mpu6500.obj -MD -MP -MF accgyro/$(DEPDIR)/libdriver_a-mpu6500.Tpo -c -o accgyro/libdriver_a-mpu6500.obj `if test -f 'accgyro/mpu6500.c'; then $(CYGPATH_W) 'accgyro/mpu6500.c'; else $(CYGPATH_W) '$(srcdir)/accgyro/mpu6500.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) accgyro/$(DEPDIR)/libdriver_a-mpu6500.Tpo accgyro/$(DEPDIR)/libdriver_a-mpu6500.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='accgyro/mpu6500.c' object='accgyro/libdriver_a-mpu6500.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o accgyro/libdriver_a-mpu6500.obj `if test -f 'accgyro/mpu6500.c'; then $(CYGPATH_W) 'accgyro/mpu6500.c'; else $(CYGPATH_W) '$(srcdir)/accgyro/mpu6500.c'; fi`
+
+analog/libdriver_a-lp55231.o: analog/lp55231.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT analog/libdriver_a-lp55231.o -MD -MP -MF analog/$(DEPDIR)/libdriver_a-lp55231.Tpo -c -o analog/libdriver_a-lp55231.o `test -f 'analog/lp55231.c' || echo '$(srcdir)/'`analog/lp55231.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) analog/$(DEPDIR)/libdriver_a-lp55231.Tpo analog/$(DEPDIR)/libdriver_a-lp55231.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='analog/lp55231.c' object='analog/libdriver_a-lp55231.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o analog/libdriver_a-lp55231.o `test -f 'analog/lp55231.c' || echo '$(srcdir)/'`analog/lp55231.c
+
+analog/libdriver_a-lp55231.obj: analog/lp55231.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT analog/libdriver_a-lp55231.obj -MD -MP -MF analog/$(DEPDIR)/libdriver_a-lp55231.Tpo -c -o analog/libdriver_a-lp55231.obj `if test -f 'analog/lp55231.c'; then $(CYGPATH_W) 'analog/lp55231.c'; else $(CYGPATH_W) '$(srcdir)/analog/lp55231.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) analog/$(DEPDIR)/libdriver_a-lp55231.Tpo analog/$(DEPDIR)/libdriver_a-lp55231.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='analog/lp55231.c' object='analog/libdriver_a-lp55231.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o analog/libdriver_a-lp55231.obj `if test -f 'analog/lp55231.c'; then $(CYGPATH_W) 'analog/lp55231.c'; else $(CYGPATH_W) '$(srcdir)/analog/lp55231.c'; fi`
+
+analog/libdriver_a-mcp4461.o: analog/mcp4461.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT analog/libdriver_a-mcp4461.o -MD -MP -MF analog/$(DEPDIR)/libdriver_a-mcp4461.Tpo -c -o analog/libdriver_a-mcp4461.o `test -f 'analog/mcp4461.c' || echo '$(srcdir)/'`analog/mcp4461.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) analog/$(DEPDIR)/libdriver_a-mcp4461.Tpo analog/$(DEPDIR)/libdriver_a-mcp4461.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='analog/mcp4461.c' object='analog/libdriver_a-mcp4461.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o analog/libdriver_a-mcp4461.o `test -f 'analog/mcp4461.c' || echo '$(srcdir)/'`analog/mcp4461.c
+
+analog/libdriver_a-mcp4461.obj: analog/mcp4461.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT analog/libdriver_a-mcp4461.obj -MD -MP -MF analog/$(DEPDIR)/libdriver_a-mcp4461.Tpo -c -o analog/libdriver_a-mcp4461.obj `if test -f 'analog/mcp4461.c'; then $(CYGPATH_W) 'analog/mcp4461.c'; else $(CYGPATH_W) '$(srcdir)/analog/mcp4461.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) analog/$(DEPDIR)/libdriver_a-mcp4461.Tpo analog/$(DEPDIR)/libdriver_a-mcp4461.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='analog/mcp4461.c' object='analog/libdriver_a-mcp4461.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o analog/libdriver_a-mcp4461.obj `if test -f 'analog/mcp4461.c'; then $(CYGPATH_W) 'analog/mcp4461.c'; else $(CYGPATH_W) '$(srcdir)/analog/mcp4461.c'; fi`
+
+baro/libdriver_a-bmp280.o: baro/bmp280.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT baro/libdriver_a-bmp280.o -MD -MP -MF baro/$(DEPDIR)/libdriver_a-bmp280.Tpo -c -o baro/libdriver_a-bmp280.o `test -f 'baro/bmp280.c' || echo '$(srcdir)/'`baro/bmp280.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) baro/$(DEPDIR)/libdriver_a-bmp280.Tpo baro/$(DEPDIR)/libdriver_a-bmp280.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='baro/bmp280.c' object='baro/libdriver_a-bmp280.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o baro/libdriver_a-bmp280.o `test -f 'baro/bmp280.c' || echo '$(srcdir)/'`baro/bmp280.c
+
+baro/libdriver_a-bmp280.obj: baro/bmp280.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT baro/libdriver_a-bmp280.obj -MD -MP -MF baro/$(DEPDIR)/libdriver_a-bmp280.Tpo -c -o baro/libdriver_a-bmp280.obj `if test -f 'baro/bmp280.c'; then $(CYGPATH_W) 'baro/bmp280.c'; else $(CYGPATH_W) '$(srcdir)/baro/bmp280.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) baro/$(DEPDIR)/libdriver_a-bmp280.Tpo baro/$(DEPDIR)/libdriver_a-bmp280.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='baro/bmp280.c' object='baro/libdriver_a-bmp280.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o baro/libdriver_a-bmp280.obj `if test -f 'baro/bmp280.c'; then $(CYGPATH_W) 'baro/bmp280.c'; else $(CYGPATH_W) '$(srcdir)/baro/bmp280.c'; fi`
+
+can/libdriver_a-canopen.o: can/canopen.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT can/libdriver_a-canopen.o -MD -MP -MF can/$(DEPDIR)/libdriver_a-canopen.Tpo -c -o can/libdriver_a-canopen.o `test -f 'can/canopen.c' || echo '$(srcdir)/'`can/canopen.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) can/$(DEPDIR)/libdriver_a-canopen.Tpo can/$(DEPDIR)/libdriver_a-canopen.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='can/canopen.c' object='can/libdriver_a-canopen.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o can/libdriver_a-canopen.o `test -f 'can/canopen.c' || echo '$(srcdir)/'`can/canopen.c
+
+can/libdriver_a-canopen.obj: can/canopen.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT can/libdriver_a-canopen.obj -MD -MP -MF can/$(DEPDIR)/libdriver_a-canopen.Tpo -c -o can/libdriver_a-canopen.obj `if test -f 'can/canopen.c'; then $(CYGPATH_W) 'can/canopen.c'; else $(CYGPATH_W) '$(srcdir)/can/canopen.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) can/$(DEPDIR)/libdriver_a-canopen.Tpo can/$(DEPDIR)/libdriver_a-canopen.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='can/canopen.c' object='can/libdriver_a-canopen.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o can/libdriver_a-canopen.obj `if test -f 'can/canopen.c'; then $(CYGPATH_W) 'can/canopen.c'; else $(CYGPATH_W) '$(srcdir)/can/canopen.c'; fi`
+
+disp/libdriver_a-ili9340.o: disp/ili9340.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT disp/libdriver_a-ili9340.o -MD -MP -MF disp/$(DEPDIR)/libdriver_a-ili9340.Tpo -c -o disp/libdriver_a-ili9340.o `test -f 'disp/ili9340.c' || echo '$(srcdir)/'`disp/ili9340.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) disp/$(DEPDIR)/libdriver_a-ili9340.Tpo disp/$(DEPDIR)/libdriver_a-ili9340.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='disp/ili9340.c' object='disp/libdriver_a-ili9340.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o disp/libdriver_a-ili9340.o `test -f 'disp/ili9340.c' || echo '$(srcdir)/'`disp/ili9340.c
+
+disp/libdriver_a-ili9340.obj: disp/ili9340.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT disp/libdriver_a-ili9340.obj -MD -MP -MF disp/$(DEPDIR)/libdriver_a-ili9340.Tpo -c -o disp/libdriver_a-ili9340.obj `if test -f 'disp/ili9340.c'; then $(CYGPATH_W) 'disp/ili9340.c'; else $(CYGPATH_W) '$(srcdir)/disp/ili9340.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) disp/$(DEPDIR)/libdriver_a-ili9340.Tpo disp/$(DEPDIR)/libdriver_a-ili9340.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='disp/ili9340.c' object='disp/libdriver_a-ili9340.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o disp/libdriver_a-ili9340.obj `if test -f 'disp/ili9340.c'; then $(CYGPATH_W) 'disp/ili9340.c'; else $(CYGPATH_W) '$(srcdir)/disp/ili9340.c'; fi`
+
+disp/libdriver_a-ledpanel.o: disp/ledpanel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT disp/libdriver_a-ledpanel.o -MD -MP -MF disp/$(DEPDIR)/libdriver_a-ledpanel.Tpo -c -o disp/libdriver_a-ledpanel.o `test -f 'disp/ledpanel.c' || echo '$(srcdir)/'`disp/ledpanel.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) disp/$(DEPDIR)/libdriver_a-ledpanel.Tpo disp/$(DEPDIR)/libdriver_a-ledpanel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='disp/ledpanel.c' object='disp/libdriver_a-ledpanel.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o disp/libdriver_a-ledpanel.o `test -f 'disp/ledpanel.c' || echo '$(srcdir)/'`disp/ledpanel.c
+
+disp/libdriver_a-ledpanel.obj: disp/ledpanel.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT disp/libdriver_a-ledpanel.obj -MD -MP -MF disp/$(DEPDIR)/libdriver_a-ledpanel.Tpo -c -o disp/libdriver_a-ledpanel.obj `if test -f 'disp/ledpanel.c'; then $(CYGPATH_W) 'disp/ledpanel.c'; else $(CYGPATH_W) '$(srcdir)/disp/ledpanel.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) disp/$(DEPDIR)/libdriver_a-ledpanel.Tpo disp/$(DEPDIR)/libdriver_a-ledpanel.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='disp/ledpanel.c' object='disp/libdriver_a-ledpanel.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o disp/libdriver_a-ledpanel.obj `if test -f 'disp/ledpanel.c'; then $(CYGPATH_W) 'disp/ledpanel.c'; else $(CYGPATH_W) '$(srcdir)/disp/ledpanel.c'; fi`
+
+gpio/libdriver_a-mcp2317.o: gpio/mcp2317.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT gpio/libdriver_a-mcp2317.o -MD -MP -MF gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo -c -o gpio/libdriver_a-mcp2317.o `test -f 'gpio/mcp2317.c' || echo '$(srcdir)/'`gpio/mcp2317.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo gpio/$(DEPDIR)/libdriver_a-mcp2317.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpio/mcp2317.c' object='gpio/libdriver_a-mcp2317.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o gpio/libdriver_a-mcp2317.o `test -f 'gpio/mcp2317.c' || echo '$(srcdir)/'`gpio/mcp2317.c
+
+gpio/libdriver_a-mcp2317.obj: gpio/mcp2317.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT gpio/libdriver_a-mcp2317.obj -MD -MP -MF gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo -c -o gpio/libdriver_a-mcp2317.obj `if test -f 'gpio/mcp2317.c'; then $(CYGPATH_W) 'gpio/mcp2317.c'; else $(CYGPATH_W) '$(srcdir)/gpio/mcp2317.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo gpio/$(DEPDIR)/libdriver_a-mcp2317.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpio/mcp2317.c' object='gpio/libdriver_a-mcp2317.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o gpio/libdriver_a-mcp2317.obj `if test -f 'gpio/mcp2317.c'; then $(CYGPATH_W) 'gpio/mcp2317.c'; else $(CYGPATH_W) '$(srcdir)/gpio/mcp2317.c'; fi`
+
+gpio/libdriver_a-max14890.o: gpio/max14890.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT gpio/libdriver_a-max14890.o -MD -MP -MF gpio/$(DEPDIR)/libdriver_a-max14890.Tpo -c -o gpio/libdriver_a-max14890.o `test -f 'gpio/max14890.c' || echo '$(srcdir)/'`gpio/max14890.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gpio/$(DEPDIR)/libdriver_a-max14890.Tpo gpio/$(DEPDIR)/libdriver_a-max14890.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpio/max14890.c' object='gpio/libdriver_a-max14890.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o gpio/libdriver_a-max14890.o `test -f 'gpio/max14890.c' || echo '$(srcdir)/'`gpio/max14890.c
+
+gpio/libdriver_a-max14890.obj: gpio/max14890.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT gpio/libdriver_a-max14890.obj -MD -MP -MF gpio/$(DEPDIR)/libdriver_a-max14890.Tpo -c -o gpio/libdriver_a-max14890.obj `if test -f 'gpio/max14890.c'; then $(CYGPATH_W) 'gpio/max14890.c'; else $(CYGPATH_W) '$(srcdir)/gpio/max14890.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gpio/$(DEPDIR)/libdriver_a-max14890.Tpo gpio/$(DEPDIR)/libdriver_a-max14890.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gpio/max14890.c' object='gpio/libdriver_a-max14890.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o gpio/libdriver_a-max14890.obj `if test -f 'gpio/max14890.c'; then $(CYGPATH_W) 'gpio/max14890.c'; else $(CYGPATH_W) '$(srcdir)/gpio/max14890.c'; fi`
+
+hbridge/libdriver_a-drv8302.o: hbridge/drv8302.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT hbridge/libdriver_a-drv8302.o -MD -MP -MF hbridge/$(DEPDIR)/libdriver_a-drv8302.Tpo -c -o hbridge/libdriver_a-drv8302.o `test -f 'hbridge/drv8302.c' || echo '$(srcdir)/'`hbridge/drv8302.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) hbridge/$(DEPDIR)/libdriver_a-drv8302.Tpo hbridge/$(DEPDIR)/libdriver_a-drv8302.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hbridge/drv8302.c' object='hbridge/libdriver_a-drv8302.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o hbridge/libdriver_a-drv8302.o `test -f 'hbridge/drv8302.c' || echo '$(srcdir)/'`hbridge/drv8302.c
+
+hbridge/libdriver_a-drv8302.obj: hbridge/drv8302.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT hbridge/libdriver_a-drv8302.obj -MD -MP -MF hbridge/$(DEPDIR)/libdriver_a-drv8302.Tpo -c -o hbridge/libdriver_a-drv8302.obj `if test -f 'hbridge/drv8302.c'; then $(CYGPATH_W) 'hbridge/drv8302.c'; else $(CYGPATH_W) '$(srcdir)/hbridge/drv8302.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) hbridge/$(DEPDIR)/libdriver_a-drv8302.Tpo hbridge/$(DEPDIR)/libdriver_a-drv8302.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='hbridge/drv8302.c' object='hbridge/libdriver_a-drv8302.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o hbridge/libdriver_a-drv8302.obj `if test -f 'hbridge/drv8302.c'; then $(CYGPATH_W) 'hbridge/drv8302.c'; else $(CYGPATH_W) '$(srcdir)/hbridge/drv8302.c'; fi`
+
+mem/libdriver_a-at24.o: mem/at24.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT mem/libdriver_a-at24.o -MD -MP -MF mem/$(DEPDIR)/libdriver_a-at24.Tpo -c -o mem/libdriver_a-at24.o `test -f 'mem/at24.c' || echo '$(srcdir)/'`mem/at24.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mem/$(DEPDIR)/libdriver_a-at24.Tpo mem/$(DEPDIR)/libdriver_a-at24.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mem/at24.c' object='mem/libdriver_a-at24.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o mem/libdriver_a-at24.o `test -f 'mem/at24.c' || echo '$(srcdir)/'`mem/at24.c
+
+mem/libdriver_a-at24.obj: mem/at24.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT mem/libdriver_a-at24.obj -MD -MP -MF mem/$(DEPDIR)/libdriver_a-at24.Tpo -c -o mem/libdriver_a-at24.obj `if test -f 'mem/at24.c'; then $(CYGPATH_W) 'mem/at24.c'; else $(CYGPATH_W) '$(srcdir)/mem/at24.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mem/$(DEPDIR)/libdriver_a-at24.Tpo mem/$(DEPDIR)/libdriver_a-at24.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mem/at24.c' object='mem/libdriver_a-at24.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o mem/libdriver_a-at24.obj `if test -f 'mem/at24.c'; then $(CYGPATH_W) 'mem/at24.c'; else $(CYGPATH_W) '$(srcdir)/mem/at24.c'; fi`
+
+pointer/libdriver_a-pmw3360.o: pointer/pmw3360.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT pointer/libdriver_a-pmw3360.o -MD -MP -MF pointer/$(DEPDIR)/libdriver_a-pmw3360.Tpo -c -o pointer/libdriver_a-pmw3360.o `test -f 'pointer/pmw3360.c' || echo '$(srcdir)/'`pointer/pmw3360.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) pointer/$(DEPDIR)/libdriver_a-pmw3360.Tpo pointer/$(DEPDIR)/libdriver_a-pmw3360.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pointer/pmw3360.c' object='pointer/libdriver_a-pmw3360.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o pointer/libdriver_a-pmw3360.o `test -f 'pointer/pmw3360.c' || echo '$(srcdir)/'`pointer/pmw3360.c
+
+pointer/libdriver_a-pmw3360.obj: pointer/pmw3360.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT pointer/libdriver_a-pmw3360.obj -MD -MP -MF pointer/$(DEPDIR)/libdriver_a-pmw3360.Tpo -c -o pointer/libdriver_a-pmw3360.obj `if test -f 'pointer/pmw3360.c'; then $(CYGPATH_W) 'pointer/pmw3360.c'; else $(CYGPATH_W) '$(srcdir)/pointer/pmw3360.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) pointer/$(DEPDIR)/libdriver_a-pmw3360.Tpo pointer/$(DEPDIR)/libdriver_a-pmw3360.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pointer/pmw3360.c' object='pointer/libdriver_a-pmw3360.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o pointer/libdriver_a-pmw3360.obj `if test -f 'pointer/pmw3360.c'; then $(CYGPATH_W) 'pointer/pmw3360.c'; else $(CYGPATH_W) '$(srcdir)/pointer/pmw3360.c'; fi`
+
+pointer/libdriver_a-adns3080.o: pointer/adns3080.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT pointer/libdriver_a-adns3080.o -MD -MP -MF pointer/$(DEPDIR)/libdriver_a-adns3080.Tpo -c -o pointer/libdriver_a-adns3080.o `test -f 'pointer/adns3080.c' || echo '$(srcdir)/'`pointer/adns3080.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) pointer/$(DEPDIR)/libdriver_a-adns3080.Tpo pointer/$(DEPDIR)/libdriver_a-adns3080.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pointer/adns3080.c' object='pointer/libdriver_a-adns3080.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o pointer/libdriver_a-adns3080.o `test -f 'pointer/adns3080.c' || echo '$(srcdir)/'`pointer/adns3080.c
+
+pointer/libdriver_a-adns3080.obj: pointer/adns3080.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT pointer/libdriver_a-adns3080.obj -MD -MP -MF pointer/$(DEPDIR)/libdriver_a-adns3080.Tpo -c -o pointer/libdriver_a-adns3080.obj `if test -f 'pointer/adns3080.c'; then $(CYGPATH_W) 'pointer/adns3080.c'; else $(CYGPATH_W) '$(srcdir)/pointer/adns3080.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) pointer/$(DEPDIR)/libdriver_a-adns3080.Tpo pointer/$(DEPDIR)/libdriver_a-adns3080.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='pointer/adns3080.c' object='pointer/libdriver_a-adns3080.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o pointer/libdriver_a-adns3080.obj `if test -f 'pointer/adns3080.c'; then $(CYGPATH_W) 'pointer/adns3080.c'; else $(CYGPATH_W) '$(srcdir)/pointer/adns3080.c'; fi`
+
+usb/libdriver_a-usbd_cdc.o: usb/usbd_cdc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT usb/libdriver_a-usbd_cdc.o -MD -MP -MF usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo -c -o usb/libdriver_a-usbd_cdc.o `test -f 'usb/usbd_cdc.c' || echo '$(srcdir)/'`usb/usbd_cdc.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo usb/$(DEPDIR)/libdriver_a-usbd_cdc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='usb/usbd_cdc.c' object='usb/libdriver_a-usbd_cdc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o usb/libdriver_a-usbd_cdc.o `test -f 'usb/usbd_cdc.c' || echo '$(srcdir)/'`usb/usbd_cdc.c
+
+usb/libdriver_a-usbd_cdc.obj: usb/usbd_cdc.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT usb/libdriver_a-usbd_cdc.obj -MD -MP -MF usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo -c -o usb/libdriver_a-usbd_cdc.obj `if test -f 'usb/usbd_cdc.c'; then $(CYGPATH_W) 'usb/usbd_cdc.c'; else $(CYGPATH_W) '$(srcdir)/usb/usbd_cdc.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo usb/$(DEPDIR)/libdriver_a-usbd_cdc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='usb/usbd_cdc.c' object='usb/libdriver_a-usbd_cdc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o usb/libdriver_a-usbd_cdc.obj `if test -f 'usb/usbd_cdc.c'; then $(CYGPATH_W) 'usb/usbd_cdc.c'; else $(CYGPATH_W) '$(srcdir)/usb/usbd_cdc.c'; fi`
+
+tty/libdriver_a-console.o: tty/console.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT tty/libdriver_a-console.o -MD -MP -MF tty/$(DEPDIR)/libdriver_a-console.Tpo -c -o tty/libdriver_a-console.o `test -f 'tty/console.c' || echo '$(srcdir)/'`tty/console.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tty/$(DEPDIR)/libdriver_a-console.Tpo tty/$(DEPDIR)/libdriver_a-console.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tty/console.c' object='tty/libdriver_a-console.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o tty/libdriver_a-console.o `test -f 'tty/console.c' || echo '$(srcdir)/'`tty/console.c
+
+tty/libdriver_a-console.obj: tty/console.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT tty/libdriver_a-console.obj -MD -MP -MF tty/$(DEPDIR)/libdriver_a-console.Tpo -c -o tty/libdriver_a-console.obj `if test -f 'tty/console.c'; then $(CYGPATH_W) 'tty/console.c'; else $(CYGPATH_W) '$(srcdir)/tty/console.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) tty/$(DEPDIR)/libdriver_a-console.Tpo tty/$(DEPDIR)/libdriver_a-console.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='tty/console.c' object='tty/libdriver_a-console.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o tty/libdriver_a-console.obj `if test -f 'tty/console.c'; then $(CYGPATH_W) 'tty/console.c'; else $(CYGPATH_W) '$(srcdir)/tty/console.c'; fi`
+
+libdriver_a-vardir.o: vardir.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT libdriver_a-vardir.o -MD -MP -MF $(DEPDIR)/libdriver_a-vardir.Tpo -c -o libdriver_a-vardir.o `test -f 'vardir.c' || echo '$(srcdir)/'`vardir.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libdriver_a-vardir.Tpo $(DEPDIR)/libdriver_a-vardir.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vardir.c' object='libdriver_a-vardir.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o libdriver_a-vardir.o `test -f 'vardir.c' || echo '$(srcdir)/'`vardir.c
+
+libdriver_a-vardir.obj: vardir.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT libdriver_a-vardir.obj -MD -MP -MF $(DEPDIR)/libdriver_a-vardir.Tpo -c -o libdriver_a-vardir.obj `if test -f 'vardir.c'; then $(CYGPATH_W) 'vardir.c'; else $(CYGPATH_W) '$(srcdir)/vardir.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libdriver_a-vardir.Tpo $(DEPDIR)/libdriver_a-vardir.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='vardir.c' object='libdriver_a-vardir.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o libdriver_a-vardir.obj `if test -f 'vardir.c'; then $(CYGPATH_W) 'vardir.c'; else $(CYGPATH_W) '$(srcdir)/vardir.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -1,3 +1,4 @@
 nobase_pkginclude_HEADERS = \
+	can/ds402.h\
 	dts/mcp2317.h\
-	can/ds402.h
+	hbridge/drv8302.h

@@ -17,6 +17,7 @@ libdriver_a_SOURCES=\
 	tty/console.c\
 	vardir.c
 libdriver_a_LIBADD=
+libdriver_a_CFLAGS = -I$(top_srcdir)/include
 
 other_sources =\
     accgyro/adxl345.c\
