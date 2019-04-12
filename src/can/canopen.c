@@ -1388,13 +1388,16 @@ int canopen_sdo_write(struct canopen *self, uint8_t node_id, uint32_t dict, cons
 
 	canopen_debug("SDO write %06x on %02x\n", dict, node_id);
 	if(can_send(self->port, &tmsg, CANOPEN_CAN_TX_TIMEOUT) < 0){
+		self->sdo.req.running = false;
 		thread_mutex_unlock(&self->sdo.mx);
 		return -EIO;
 	}
 
 	// wait until the request either completes or fails
 	if(thread_sem_take_wait(&self->sdo.req.done, CANOPEN_CAN_TX_TIMEOUT) < 0){
-		self->sdo.req.result = -ETIMEDOUT;
+		self->sdo.req.running = false;
+		thread_mutex_unlock(&self->sdo.mx);
+		return -ETIMEDOUT;
 	}
 
 	self->sdo.req.running = false;

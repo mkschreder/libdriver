@@ -91,7 +91,7 @@ static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *d
 	return -1;
 }
 
-struct analog_device_ops _analog_ops = {
+static struct analog_device_ops _analog_ops = {
 	.write = _lp55231_analog_write,
 	.read = _lp55231_analog_read
 };
