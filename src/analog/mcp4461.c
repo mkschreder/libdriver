@@ -49,6 +49,8 @@
 #define MCP4XXX_OP_READ 0x0C
 #define MCP4XXX_OP_WRITE 0x00
 
+#define MCP4461_TIMEOUT 1000
+
 struct mcp4461 {
 	i2c_device_t i2c;
 	gpio_device_t gpio;
@@ -77,7 +79,8 @@ static int _mcp4461_analog_write(analog_device_t dev, unsigned int chan, float v
 	}
 
 	int ret = 0;
-	if((ret = i2c_write8_reg8(self->i2c, self->addr, reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8), (uint8_t)(val & 0xff))) < 0) return ret;
+	uint8_t data[] = {reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8), (uint8_t)(val & 0xff)};
+	if((ret = i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, MCP4461_TIMEOUT)) < 0) return ret;
 
 	return 0;
 }
@@ -128,7 +131,9 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 	}
 
 	int ret = 0;
-	if((ret = i2c_read8_buf(i2c, addr, MCP4XXX_REG_STATUS | MCP4XXX_OP_READ, data, 2)) < 0){
+	uint8_t reg = MCP4XXX_REG_STATUS | MCP4XXX_OP_READ;
+
+	if((ret = i2c_transfer(i2c, addr, &reg, 1, data, 2, MCP4461_TIMEOUT)) < 0){
 		printk("mcp4461: i2c error\n");
 		return -EIO;
 	}

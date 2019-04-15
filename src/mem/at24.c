@@ -14,6 +14,8 @@
 
 //#define AT24_PAGE_SIZE 32
 
+#define AT24_TIMEOUT 1000
+
 struct at24 {
     i2c_device_t i2c;
     uint8_t addr;
@@ -23,7 +25,8 @@ struct at24 {
 static int _at24_read(memory_device_t dev, size_t offset, void *data, size_t size){
     if(!dev) return -EINVAL;
     struct at24 *self = container_of(dev, struct at24, dev.ops);
-    return i2c_read8_buf(self->i2c, self->addr, (uint8_t)offset, data, size);
+	uint8_t tx_data[1] = { (uint8_t)offset };
+    return i2c_transfer(self->i2c, self->addr, tx_data, 1, data, size, AT24_TIMEOUT);
 }
 
 static int _at24_write(memory_device_t dev, size_t offset, const void *data, size_t _size){
@@ -34,7 +37,8 @@ static int _at24_write(memory_device_t dev, size_t offset, const void *data, siz
     // write one byte at a time (guaranteed support on all devices)
     while(size--){
         //if(i2c_write16_reg8(self->i2c, self->addr, (uint16_t)offset, *buf++) < 0){
-        if(i2c_write8_reg8(self->i2c, self->addr, (uint8_t)offset, *buf++) < 0){
+		uint8_t dat[2] = {(uint8_t)offset, *buf++};
+        if(i2c_transfer(self->i2c, self->addr, dat, 2, NULL, 0, AT24_TIMEOUT) < 0){
             return -EFAULT;
         }
         // twr is at least 10ms

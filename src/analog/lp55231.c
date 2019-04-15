@@ -51,7 +51,27 @@ enum {
 	LP55231_REG_D8_PWM = 0x1d,
 	LP55231_REG_D9_PWM = 0x1e,
 	LP55231_REG_MISC = 0x36,
+	LP55231_REG_STATUS = 0x3a,
+	LP55231_REG_RESET = 0x3C,
+	LP55231_REG_LED_TEST = 0x41,
+	LP55231_REG_LED_TEST_ADC = 0x42
 };
+
+#define LP55231_REG_RESET_DO_RESET 0xff
+
+#define LP55231_REG_MISC_CLOCK_INTERNAL 0x01
+#define LP55231_REG_MISC_CP_FORCED_BYPASS 0x08
+
+#define LP55231_REG_STATUS_LED_TEST_DONE_BIT (1 << 7)
+#define LP55231_REG_STATUS_MASK_BUSY_BIT (1 << 6)
+#define LP55231_REG_STATUS_STARTUP_BUSY_BIT (1 << 5)
+#define LP55231_REG_STATUS_ENGINE_BUSY_BIT (1 << 4)
+
+#define LP55231_REG_LED_TEST_START_CONVERSION_BIT (1 << 7)
+
+#define LP55231_LED_COUNT 9
+
+#define LP55231_TIMEOUT 1000
 
 struct lp55231 {
 	i2c_device_t i2c;
@@ -63,14 +83,33 @@ struct lp55231 {
 };
 
 static int _lp55231_write_reg(struct lp55231 *self, uint8_t reg, uint8_t value){
-	uint8_t data[] = {value};
-	return i2c_write8_buf(self->i2c, self->addr, reg, data, sizeof(data));
+	uint8_t data[] = {reg, value};
+	return i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, LP55231_TIMEOUT);
 }
 
-static uint8_t _lp55231_read_reg(struct lp55231 *self, uint8_t reg){
-	uint8_t data[1] = {0};
-	i2c_read8_buf(self->i2c, self->addr, reg, data, sizeof(data));
-	return data[0];
+static int _lp55231_read_reg(struct lp55231 *self, uint8_t reg, uint8_t *val){
+	return i2c_transfer(self->i2c, self->addr, &reg, 1, val, 1, LP55231_TIMEOUT);
+}
+
+static int _lp55231_read_led_voltage(struct lp55231 *self, unsigned led, float *voltage){
+	if(led > 9) return -EINVAL;
+
+	// start a conversion
+	_lp55231_write_reg(self, LP55231_REG_LED_TEST,
+			(uint8_t)(LP55231_REG_LED_TEST_START_CONVERSION_BIT | (led & 0x1f)));
+
+	// the measurement takes 2.7ms according to datasheet
+	thread_sleep_ms(4);
+
+	uint8_t status = 0;
+	if(_lp55231_read_reg(self, LP55231_REG_STATUS, &status) == 0 && (status & LP55231_REG_STATUS_LED_TEST_DONE_BIT)){
+		uint8_t res = 0;
+		if(_lp55231_read_reg(self, LP55231_REG_LED_TEST_ADC, &res) == 0){
+			*voltage = (float)res * 0.03f - 1.478f;
+			return 0;
+		}
+	}
+	return -1;
 }
 
 static int _lp55231_analog_write(analog_device_t dev, unsigned int chan, float value){
@@ -88,7 +127,13 @@ static int _lp55231_analog_write(analog_device_t dev, unsigned int chan, float v
 }
 
 static int _lp55231_analog_read(analog_device_t dev, unsigned int chan, float *data){
-	return -1;
+	struct lp55231 *self = container_of(dev, struct lp55231, analog_dev.ops);
+
+	thread_mutex_lock(&self->lock);
+	int r = _lp55231_read_led_voltage(self, chan, data);
+	thread_mutex_unlock(&self->lock);
+
+	return r;
 }
 
 static struct analog_device_ops _lp55231_analog_ops = {
@@ -102,12 +147,12 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
 	uint32_t en_pin = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "en_pin", 0);
 
-	if(!i2c){ printk("lp55231: no i2c\n"); return -EINVAL; }
-	if(!gpio) { printk("lp55231: no gpio\n"); return -EINVAL; }
+	if(!i2c) { printk(PRINT_ERROR "lp55231: no i2c\n"); return -EINVAL; }
+	if(!gpio) { printk(PRINT_ERROR "lp55231: no gpio\n"); return -EINVAL; }
 
 	struct lp55231 *self = kzmalloc(sizeof(struct lp55231));
 	if(!self){
-		printk("lp55231: nomem\n");
+		printk(PRINT_ERROR "lp55231: nomem\n");
 		return -1;
 	}
 
@@ -119,18 +164,34 @@ static int _lp55231_probe(void *fdt, int fdt_node){
 
 	// toggle hardware enable pin
 	gpio_set(self->gpio, self->en_pin);
-	thread_sleep_us(50);
+
+	// run reset sequence
+	_lp55231_write_reg(self, LP55231_REG_RESET, LP55231_REG_RESET_DO_RESET);
+
 	// toggle enable in the register
 	_lp55231_write_reg(self, LP55231_REG_CTRL1, LP55231_REG_CTRL1_BIT_EN);
-	thread_sleep_us(50);
 
-	_lp55231_write_reg(self, LP55231_REG_MISC, 0x09);
-	thread_sleep_us(50);
+	// the chip goes through startup sequence 500us according to datasheet
+	thread_sleep_ms(1);
+
+	// select clock and charge pump mode
+	_lp55231_write_reg(self, LP55231_REG_MISC, LP55231_REG_MISC_CLOCK_INTERNAL | LP55231_REG_MISC_CP_FORCED_BYPASS);
+
+	printk("lp55231: checking LED voltages...\n");
+	for(unsigned c = 0; c < LP55231_LED_COUNT; c++){
+		float volts = 0;
+		if(_lp55231_read_led_voltage(self, c, &volts)  == 0) {
+			printk("lp55231: LED %d: voltage %dmV\n", c, (int32_t)(volts * 1000));
+		} else {
+			printk(PRINT_ERROR "lp55231: could not read LED %d voltage\n", c);
+		}
+	}
 
 	// initialize all leds to half pwm
 	for(int c = 0; c < 8; c++){
 		_lp55231_write_reg(self, (uint8_t)(LP55231_REG_D1_PWM + c), 0x80);
 	}
+
 
 	analog_device_init(&self->analog_dev, fdt, fdt_node, &_lp55231_analog_ops);
 	analog_device_register(&self->analog_dev);

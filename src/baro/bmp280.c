@@ -48,6 +48,8 @@
 #define T_SETUP_PRESSURE_MAX             (10)
 // 10/16 = 0.625 ms
 
+#define BMP280_TIMEOUT 1000
+
 struct bmp280_calib_data {
     uint16_t dig_T1; /* calibration T1 data */
     int16_t dig_T2; /* calibration T2 data */
@@ -93,7 +95,8 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out){
 
 	// start measurement
     // set oversampling + power mode (forced), and start sampling
-    if(i2c_write8_reg8(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE) < 0){
+	uint8_t dat[] = {BMP280_CTRL_MEAS_REG, BMP280_MODE};
+    if(i2c_transfer(self->i2c, self->address, dat, 2, NULL, 0, BMP280_TIMEOUT) < 0){
 		baro_debug("baro: errstart\n");
 		return -EIO;
 	}
@@ -104,7 +107,8 @@ int _bmp280_read(baro_device_t dev, struct baro_reading *out){
 
     // read data from sensor
     uint8_t data[BMP280_DATA_FRAME_SIZE];
-    if(i2c_read8_buf(self->i2c, self->address, BMP280_PRESSURE_MSB_REG, data, BMP280_DATA_FRAME_SIZE) < 0){
+	uint8_t reg = BMP280_PRESSURE_MSB_REG;
+    if(i2c_transfer(self->i2c, self->address, &reg, 1, data, BMP280_DATA_FRAME_SIZE, BMP280_TIMEOUT) < 0){
 		baro_debug("baro: noresult\n");
 		return -EIO;
 	}
@@ -167,7 +171,8 @@ int _bmp280_probe(void *fdt, int fdt_node){
 
     // try to identify the chip
     uint8_t chip_id = 0;
-    if(i2c_read8_reg8(i2c, address, BMP280_CHIP_ID_REG, &chip_id) != 1){
+	uint8_t reg = BMP280_CHIP_ID_REG;
+    if(i2c_transfer(i2c, address, &reg, 1, &chip_id, 1, BMP280_TIMEOUT) != 1){
 		dbg_printk("bmp280: errio!\n");
         return -EIO;
     }
@@ -184,7 +189,8 @@ int _bmp280_probe(void *fdt, int fdt_node){
     self->address = address;
 
     // read calibration
-    i2c_read8_buf(self->i2c, self->address, BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG, &self->cal_data, 24);
+	reg = BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG;
+    i2c_transfer(self->i2c, self->address, &reg, 1, &self->cal_data, 24, BMP280_TIMEOUT);
 
     // set oversampling + power mode (forced), and start sampling
     //i2c_write_reg(self->i2c, self->address, BMP280_CTRL_MEAS_REG, BMP280_MODE);

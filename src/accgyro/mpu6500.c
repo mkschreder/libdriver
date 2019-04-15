@@ -160,6 +160,8 @@ enum {
     MPU_FILTER_2100HZ_NOLPF
 };
 
+#define MPU6500_TIMEOUT 100
+
 struct mpu6500 {
     struct imu_device dev;
     i2c_device_t i2c;
@@ -180,14 +182,15 @@ int _spi_read_reg(spi_device_t spi, uint8_t reg, uint8_t *data){
 
 static int _mpu6500_write_reg(struct mpu6500 *self, uint8_t reg, uint8_t data){
     if(self->i2c){
-        return i2c_write8_reg8(self->i2c, MPU_DEFAULT_I2C_ADDR, reg, data);
+		uint8_t buf[2] = {reg, data};
+        return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, buf, 2, NULL, 0, MPU6500_TIMEOUT);
     }
     return -EINVAL;
 }
 
 static int _mpu6500_read_buf(struct mpu6500 *self, uint8_t reg, uint8_t *data, size_t len){
     if(self->i2c){
-        return i2c_read8_buf(self->i2c, MPU_DEFAULT_I2C_ADDR, reg, data, len);
+        return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, &reg, 1, data, len, MPU6500_TIMEOUT);
     }
     return -EINVAL;
 }
@@ -251,7 +254,8 @@ int _mpu6500_probe(void *fdt, int fdt_node){
 
     uint8_t sig = 0;
     if(i2c){
-        if(i2c_read8_reg8(i2c, MPU_DEFAULT_I2C_ADDR, MPU_RA_WHO_AM_I, &sig) < 0){
+		uint8_t reg = MPU_RA_WHO_AM_I;
+        if(i2c_transfer(i2c, MPU_DEFAULT_I2C_ADDR, &reg, 1, &sig, 1, MPU6500_TIMEOUT) < 0){
             dbg_printk("mpu: errio\n");
             return -1;
         }
