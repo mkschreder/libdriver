@@ -345,14 +345,14 @@ static const unsigned char _pmw3360_fw[] = {
 int _pmw3360_write(struct pmw3360 *self, uint8_t data){
     uint8_t tx[1] = {data};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, self->gpio, 0, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
     return ret;
 }
 
 int _pmw3360_read(struct pmw3360 *self, uint8_t *data){
     uint8_t tx[1] = {0};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, self->gpio, 0, tx, rx, 1, PMW3360_TRANSFER_TIMEOUT);
 	*data = rx[0];
     return ret;
 }

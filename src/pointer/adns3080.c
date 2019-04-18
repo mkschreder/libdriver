@@ -351,14 +351,14 @@ static const unsigned char _adns3080_fw[] = {
 int _adns3080_write(struct adns3080 *self, uint8_t data){
     uint8_t tx[1] = {data};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
     return ret;
 }
 
 int _adns3080_read(struct adns3080 *self, uint8_t *data){
     uint8_t tx[1] = {0};
     uint8_t rx[1] = {0};
-    int ret = spi_transfer(self->spi, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
+    int ret = spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 1, ADNS3080_TRANSFER_TIMEOUT);
 	*data = rx[0];
     return ret;
 }

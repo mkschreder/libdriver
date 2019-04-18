@@ -59,30 +59,44 @@ struct mcp4461 {
 	struct analog_device dev;
 };
 
+static int _mcp4461_write_reg(struct mcp4461 *self, uint8_t reg, uint8_t val){
+	int ret = 0;
+	uint8_t data[] = {reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8), (uint8_t)(val & 0xff)};
+	if((ret = i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, MCP4461_TIMEOUT)) < 0) return ret;
+	return 0;
+}
+
+static int _mcp4461_read_reg(struct mcp4461 *self, uint8_t reg, uint16_t *val){
+	int ret = 0;
+	reg |= MCP4XXX_OP_READ;
+
+	if((ret = i2c_transfer(self->i2c, self->addr, &reg, 1, val, 2, MCP4461_TIMEOUT)) < 0){
+		return ret;
+	}
+
+	return 0;
+}
+
 static int _mcp4461_analog_write(analog_device_t dev, unsigned int chan, float value){
 	struct mcp4461 *self = container_of(dev, struct mcp4461, dev.ops);
+
+	if(chan > 7) return -EINVAL;
 
 	value = constrain_float(value, 0, 1.0f);
 	uint16_t val = (uint16_t)((float)((uint16_t)0x3ff)*value) & 0x3ff;
 
-	uint8_t reg = 0;
-	switch(chan){
-		case 0: reg = MCP4XXX_REG_WIPER0; break;
-		case 1: reg = MCP4XXX_REG_WIPER1; break;
-		case 2: reg = MCP4XXX_REG_WIPER2; break;
-		case 3: reg = MCP4XXX_REG_WIPER3; break;
-		case 4: reg = MCP4XXX_REG_NV_WIPER0; break;
-		case 5: reg = MCP4XXX_REG_NV_WIPER1; break;
-		case 6: reg = MCP4XXX_REG_NV_WIPER2; break;
-		case 7: reg = MCP4XXX_REG_NV_WIPER3; break;
-		default: return -EINVAL;
-	}
+	static const uint8_t regs[8] = {
+		MCP4XXX_REG_WIPER0,
+		MCP4XXX_REG_WIPER1,
+		MCP4XXX_REG_WIPER2,
+		MCP4XXX_REG_WIPER3,
+		MCP4XXX_REG_NV_WIPER0,
+		MCP4XXX_REG_NV_WIPER1,
+		MCP4XXX_REG_NV_WIPER2,
+		MCP4XXX_REG_NV_WIPER3
+	};
 
-	int ret = 0;
-	uint8_t data[] = {reg | MCP4XXX_OP_WRITE | (uint8_t)(val >> 8), (uint8_t)(val & 0xff)};
-	if((ret = i2c_transfer(self->i2c, self->addr, data, 2, NULL, 0, MCP4461_TIMEOUT)) < 0) return ret;
-
-	return 0;
+	return _mcp4461_write_reg(self, regs[chan & 7] | (uint8_t)(val >> 8), (uint8_t)(val & 0xff));
 }
 
 static int _mcp4461_analog_read(analog_device_t dev, unsigned int chan, float *value){
@@ -100,7 +114,6 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 	uint8_t addr = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "reg", 0x2d);
 	int reset_pin = fdt_get_int_or_default(fdt, fdt_node, "reset_pin", -1);
 	int wp_pin = fdt_get_int_or_default(fdt, fdt_node, "wp_pin", -1);
-	uint8_t data[2];
 
 	if(!i2c){
 		printk("mcp4461: invalid i2c\n");
@@ -130,16 +143,14 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 		thread_sleep_ms(1);
 	}
 
-	int ret = 0;
-	uint8_t reg = MCP4XXX_REG_STATUS | MCP4XXX_OP_READ;
-
-	if((ret = i2c_transfer(i2c, addr, &reg, 1, data, 2, MCP4461_TIMEOUT)) < 0){
-		printk("mcp4461: i2c error\n");
+	uint16_t status = 0;
+	if(_mcp4461_read_reg(self, MCP4XXX_REG_STATUS, &status) != 0){
+		printk(PRINT_ERROR "mcp4461: could not read status\n");
 		return -EIO;
 	}
-
-	if(data[0] != 0x01 || data[1] != 0x82){
-		printk("mcp4461: invalid status\n");
+	
+	if(((status >> 8) & 0xff) != 0x82 || (status & 0xff) != 0x01){
+		printk("mcp4461: invalid status (%02x)\n", status);
 		return -1;
 	}
 

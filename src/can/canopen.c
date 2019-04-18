@@ -63,7 +63,9 @@
 #define canopen_msg_get_cob(msg) ((msg)->id & (uint32_t)~(uint32_t)0x7f)
 #define CANOPEN_MIN_SYNC_PERIOD_US 1000
 
-#define CANOPEN_INTERNAL_REG_EVENT 0x01
+#define CANOPEN_INTERNAL_REG_EVENT						0x01
+#define CANOPEN_INTERNAL_REG_ADDRESS					0x02
+#define CANOPEN_INTERNAL_REG_MODE						0x03
 
 struct canopen_pdo_entry {
 	uint32_t cob_id;
@@ -1662,6 +1664,14 @@ int canopen_pdo_tx(memory_device_t self, uint8_t node_id, const struct canopen_p
 	return _canopen_pdo_configure(self, 0x180000, node_id, conf);
 }
 
+int canopen_set_mode(memory_device_t canopen_mem, canopen_mode_t mode){
+	return memory_write(canopen_mem, CANOPEN_INTERNAL_REG_MODE, &mode, sizeof(mode));
+}
+
+int canopen_set_address(memory_device_t canopen_mem, uint8_t address){
+	return memory_write(canopen_mem, CANOPEN_INTERNAL_REG_ADDRESS, &address, sizeof(address));
+}
+
 int canopen_pdo_transmit(struct canopen *self, uint16_t cob_id, const uint8_t data[8]){
 	if(!self->address) return -1;
 	uint32_t pdo_id = (uint32_t)(cob_id & 0x7ff);
@@ -1766,6 +1776,12 @@ static int _memory_write(memory_device_t dev, size_t offset, const void *data, s
 		canopen_debug("memwrite local: %08x\n", ofs);
 		if(ofs < 0xff){ // internal registers
 			switch(ofs){
+				case CANOPEN_INTERNAL_REG_ADDRESS: {
+					self->address = *(uint8_t*)data;
+				} break;
+				case CANOPEN_INTERNAL_REG_MODE: {
+					self->mode = *(canopen_mode_t*)data;
+				} break;
 				case CANOPEN_INTERNAL_REG_EVENT: {
 					_canopen_send_event(self, *(char*)data);
 				} break;

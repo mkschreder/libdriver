@@ -128,13 +128,13 @@ void drv8302_set_gain(drv8302_t dev, drv8302_gain_t gain){
 bool drv8302_is_in_error(drv8302_t dev){
 	uint8_t r = 0;
 	memory_read((memory_device_t)dev, DRV8302_OFS_FAULT, &r, 1);
-	return (bool)r;
+	return !(bool)r;
 }
 
 bool drv8302_is_in_overcurrent(drv8302_t dev){
 	uint8_t r = 0;
 	memory_read((memory_device_t)dev, DRV8302_OFS_OCW, &r, 1);
-	return (bool)r;
+	return !(bool)r;
 }
 
 int drv8302_get_gain(drv8302_t dev){
@@ -149,9 +149,9 @@ static int _drv8302_read(memory_device_t dev, size_t offs, void *data, size_t si
 
 	if(size != 1) return -EINVAL;
 	switch(offs){
-		case DRV8302_OFS_FAULT: *(uint8_t*)data = gpio_read(self->gpio, PIN_FAULT); break;
-		case DRV8302_OFS_OCW: *(uint8_t*)data = gpio_read(self->gpio, PIN_OCW); break;
-		case DRV8302_OFS_GAIN: *(uint8_t*)data = gpio_read(self->gpio, PIN_GAIN); break;
+		case DRV8302_OFS_FAULT: *(uint8_t*)data = (uint8_t)gpio_read(self->gpio, PIN_FAULT); break;
+		case DRV8302_OFS_OCW: *(uint8_t*)data = (uint8_t)gpio_read(self->gpio, PIN_OCW); break;
+		case DRV8302_OFS_GAIN: *(uint8_t*)data = (uint8_t)gpio_read(self->gpio, PIN_GAIN); break;
 	}
 	return 1;
 }

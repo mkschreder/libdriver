@@ -78,20 +78,14 @@ static int _max14890_cmd(struct max14890 *self, uint32_t txdata, uint16_t *rxdat
 	uint8_t tx[2] = {(uint8_t)(txdata >> 8), (uint8_t)txdata};
 	uint8_t rx[2] = {0};
 
-	printk("max14890: cmd %04x\n", txdata);
-
 	thread_sleep_us(50);
 
-	gpio_reset(self->gpio, self->cs_pin);
-	spi_transfer(self->spi, tx, rx, sizeof(tx), MAX14890_TIMEOUT);
-	gpio_set(self->gpio, self->cs_pin);
+	spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, sizeof(tx), MAX14890_TIMEOUT);
 
 	thread_sleep_us(50);
 
 	// read status
-	gpio_reset(self->gpio, self->cs_pin);
-	spi_transfer(self->spi, tx, rx, sizeof(tx), MAX14890_TIMEOUT);
-	gpio_set(self->gpio, self->cs_pin);
+	spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, sizeof(tx), MAX14890_TIMEOUT);
 
 	*rxdata = (uint16_t)(((int)rx[0] << 8) | rx[1]);
 

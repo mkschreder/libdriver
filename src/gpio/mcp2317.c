@@ -65,42 +65,46 @@ struct mcp2317 {
 };
 
 static uint8_t _mcp2317_read_reg(struct mcp2317 *self, uint8_t reg){
-	char tx[] = { 0x41, reg, 0 };
-	char rx[sizeof(tx)] = {0, 0, 0};
+	uint8_t tx[3] = { 0x41, reg, 0};
+	uint8_t rx[3] = {0, 0, 0};
 
-	gpio_reset(self->gpio, self->cs_pin);
-	spi_transfer(self->spi, tx, rx, sizeof(tx), MCP2317_TIMEOUT);
-	gpio_set(self->gpio, self->cs_pin);
+	spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 3, MCP2317_TIMEOUT);
 
 	return rx[2];
 }
 
 static void _mcp2317_write_reg(struct mcp2317 *self, uint8_t reg, uint8_t value){
-	char tx[] = { 0x40, reg, (uint8_t)value };
-	char rx[sizeof(tx)] = {0, 0, 0};
+	uint8_t tx[3] = { 0x40, reg, (uint8_t)value };
+	uint8_t rx[3] = {0, 0, 0};
 
-	gpio_reset(self->gpio, self->cs_pin);
-	spi_transfer(self->spi, tx, rx, sizeof(tx), MCP2317_TIMEOUT);
-	gpio_set(self->gpio, self->cs_pin);
+	spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 3, MCP2317_TIMEOUT);
 }
 
 
 static void _mcp2317_write_reg_bits(struct mcp2317 *self, uint8_t reg,
 		uint8_t bits, uint8_t values){
-	_mcp2317_write_reg(self, reg, (uint8_t)((_mcp2317_read_reg(self, reg) & ~bits) | values));
+	thread_mutex_lock(&self->lock);
+	uint8_t oval = _mcp2317_read_reg(self, reg);
+	uint8_t val = (uint8_t)((oval & (uint8_t)~bits) | values);
+	_mcp2317_write_reg(self, reg, val);
+	thread_mutex_unlock(&self->lock);
 }
 
 static int _mcp2317_write_pin(gpio_device_t dev, uint32_t pin, bool value){
 	struct mcp2317 *self = container_of(dev, struct mcp2317, dev.ops);
 	if(pin < 8){
+		thread_mutex_lock(&self->lock);
 		_mcp2317_write_reg(self, MCP2317_REG_GPIOA,
-			(uint8_t)((_mcp2317_read_reg(self, MCP2317_REG_GPIOA) & ~(1 << pin)) | (value << pin))
+			(uint8_t)((_mcp2317_read_reg(self, MCP2317_REG_GPIOA) & (uint32_t)~(1 << pin)) | ((uint32_t)value << pin))
 		);
+		thread_mutex_unlock(&self->lock);
 	} else {
 		pin &= 0x07;
+		thread_mutex_lock(&self->lock);
 		_mcp2317_write_reg(self, MCP2317_REG_GPIOB,
-			(uint8_t)((_mcp2317_read_reg(self, MCP2317_REG_GPIOA) & ~(1 << pin)) | (value << pin))
+			(uint8_t)((_mcp2317_read_reg(self, MCP2317_REG_GPIOA) & (uint32_t)~(1 << pin)) | ((uint32_t)value << pin))
 		);
+		thread_mutex_unlock(&self->lock);
 	}
 	return 0;
 }
@@ -108,10 +112,14 @@ static int _mcp2317_write_pin(gpio_device_t dev, uint32_t pin, bool value){
 static int _mcp2317_read_pin(gpio_device_t dev, uint32_t pin, bool *value){
 	struct mcp2317 *self = container_of(dev, struct mcp2317, dev.ops);
 	if(pin < 8){
+		thread_mutex_lock(&self->lock);
 		*value = ((_mcp2317_read_reg(self, MCP2317_REG_GPIOA) >> pin) & 1)?1:0;
+		thread_mutex_unlock(&self->lock);
 	} else {
 		pin &= 0x07;
+		thread_mutex_lock(&self->lock);
 		*value = ((_mcp2317_read_reg(self, MCP2317_REG_GPIOB) >> pin) & 1)?1:0;
+		thread_mutex_unlock(&self->lock);
 	}
 	return 0;
 }
@@ -154,21 +162,29 @@ static int _mcp2317_probe(void *fdt, int fdt_node){
 		return -1;
 	}
 	struct mcp2317 *self = kzmalloc(sizeof(struct mcp2317));
-	gpio_device_init(&self->dev, fdt, fdt_node, &_mcp2317_ops);
-	gpio_device_register(&self->dev);
 	self->reset_pin = (uint32_t)reset_pin;
 	self->cs_pin = (uint32_t)cs_pin;
 	self->gpio = gpio;
 	self->spi = spi;
+	thread_mutex_init(&self->lock);
 
 	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 	if(console){
-		char name[32];
-		static int instances = 0;
-		snprintf(name, sizeof(name), "mcp2317_%d", instances++);
-		console_add_command(console, self, name, "mcp2317 utilities", "", _mcp2317_cmd);
+		console_add_command(console, self, fdt_get_name(fdt, fdt_node, NULL), "mcp2317 device control", "", _mcp2317_cmd);
 	}
+
+	gpio_set(self->gpio, self->cs_pin);
+
 	gpio_set(self->gpio, self->reset_pin);
+	gpio_reset(self->gpio, self->reset_pin);
+	gpio_set(self->gpio, self->reset_pin);
+
+	// expect registers to have default values after reset
+	if(_mcp2317_read_reg(self, 0x00) != 0xff ||
+		_mcp2317_read_reg(self, 0x01) != 0xff){
+		printk(PRINT_ERROR "Register values are garbage\n");
+		//return -1;
+	}
 
 	int len = 0;
 	const fdt32_t *val = (const fdt32_t*)fdt_getprop(fdt, fdt_node, "pinctrl", &len);
@@ -209,8 +225,11 @@ static int _mcp2317_probe(void *fdt, int fdt_node){
 		}
 	}
 
+	gpio_device_init(&self->dev, fdt, fdt_node, &_mcp2317_ops);
+	gpio_device_register(&self->dev);
+
 	printk("mcp2317: ready (cs_pin: %d, reset_pin: %d)\n", self->cs_pin, self->reset_pin);
-	return 1;
+	return 0;
 }
 
 static int _mcp2317_remove(void *fdt, int fdt_node){

@@ -170,6 +170,7 @@ struct mpu6500 {
 };
 
 int _spi_read_reg(spi_device_t spi, uint8_t reg, uint8_t *data){
+#if 0
     uint8_t tx[2] = {reg | 0x80, 0};
     uint8_t rx[2] = {0, 0};
     // try to read out the id of the chip
@@ -177,6 +178,7 @@ int _spi_read_reg(spi_device_t spi, uint8_t reg, uint8_t *data){
         return -EIO;
     }
     *data = rx[1];
+#endif
     return 1;
 }
 
