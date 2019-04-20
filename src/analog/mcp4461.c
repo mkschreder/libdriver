@@ -120,21 +120,19 @@ static int _mcp4461_probe(void *fdt, int fdt_node){
 		return -EINVAL;
 	}
 
-	if(gpio && (reset_pin < 0 || wp_pin < 0)){
-		printk("mcp4461: gpio requires wp_pin and reset_pin fields\n");
-		return -EINVAL;
-	}
-
 	struct mcp4461 *self = kzmalloc(sizeof(struct mcp4461));
 	self->i2c = i2c;
 	self->gpio = gpio;
 	self->addr = addr;
 	
-	if(self->gpio){
-		self->reset_pin = (uint32_t)reset_pin;
+	if(self->gpio && wp_pin >= 0){
 		self->wp_pin = (uint32_t)wp_pin;
-
 		gpio_set(self->gpio, self->wp_pin);
+	}
+
+	if(self->gpio && reset_pin >= 0){
+		self->reset_pin = (uint32_t)reset_pin;
+
 		gpio_set(self->gpio, self->reset_pin);
 		thread_sleep_ms(1);
 		gpio_reset(self->gpio, self->reset_pin);
