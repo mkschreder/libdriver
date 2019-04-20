@@ -36,6 +36,7 @@
 #include <libfirmware/canopen.h>
 #include <libfirmware/regmap.h>
 #include <libfirmware/memory.h>
+#include <libfirmware/console.h>
 
 #include <stdio.h>
 #include <limits.h>
@@ -259,7 +260,7 @@ struct canopen {
 
 	struct mutex lock;
 
-	timestamp_t sync_timeout;
+	uint32_t sync_timeout;
 
 	struct memory_device mem;
 };
@@ -511,7 +512,7 @@ static void _handle_message_lss(struct canopen *self, struct can_message *rx_msg
 static void _canopen_set_sync_period(struct canopen *self, uint32_t period_us){
 	self->profile.cycle_period = thread_ticks_from_us(period_us);
 	// schedule a sync right away
-	self->sync_timeout = thread_ticks_count();
+	self->sync_timeout = 0;
 }
 
 
@@ -940,16 +941,17 @@ static void _service_runner(struct canopen *self){
 	if(self->mode == CANOPEN_MASTER &&
 		!(self->profile.sync_cob_id & CANOPEN_COB_DISABLED) &&
 		self->profile.cycle_period != 0 &&
-		time_after(t, self->sync_timeout)){
-
-		uint32_t period = constrain_u32(self->profile.cycle_period, CANOPEN_MIN_SYNC_PERIOD_US, 0xffffffff);
-		self->sync_timeout = t + period - CANOPEN_MIN_SYNC_PERIOD_US;
+		self->sync_timeout == 0){
+		self->sync_timeout = self->profile.cycle_period;
 
 		_canopen_send_sync(self);
 
-		//canopen_debug("send sync pdos at %02x, type %d\n", self->address, self->mode);
 		// send any local pdos that we have configured on the master
 		_send_pending_pdos(self, PDO_SEND_SYNC);
+	}
+	
+	if(self->sync_timeout > 0){
+		self->sync_timeout--;
 	}
 
 	// send out any pending pdos
@@ -1063,9 +1065,11 @@ static ssize_t _comm_range_write(regmap_range_t range, uint32_t addr, regmap_val
 	if(id == CANOPEN_REG_DEVICE_SYNC_COB_ID) {
 		regmap_mem_to_u32(type, data, size, &self->profile.sync_cob_id);
 	} else if(id == CANOPEN_REG_DEVICE_CYCLE_PERIOD) {
-		regmap_mem_to_u32(type, data, size, &self->profile.cycle_period);
-		self->sync_timeout = micros();
-		self->mode = CANOPEN_MASTER;
+		uint32_t period_us = 0;
+		regmap_mem_to_u32(type, data, size, &period_us);
+		self->profile.cycle_period = thread_ticks_from_us(period_us);
+		self->sync_timeout = 0;
+		printk("canopen: cycle period set to %d\n", self->profile.cycle_period);
 	} else if(id >= 0x140000 && id <= 0x1AFF00) {
 		uint8_t pdo_id = (id >> 8) & 0x7f;
 		if(0x140000 == (id & 0xff8000)){
@@ -1772,7 +1776,7 @@ static int _memory_write(memory_device_t dev, size_t offset, const void *data, s
 	struct canopen *self = container_of(dev, struct canopen, mem.ops);
 	uint8_t node_id = (uint8_t)(((uint32_t)offset) >> 24);
 	uint32_t ofs = offset & 0xffffff;
-	if(node_id == self->address){
+	if(node_id == 0 || node_id == self->address){
 		canopen_debug("memwrite local: %08x\n", ofs);
 		if(ofs < 0xff){ // internal registers
 			switch(ofs){
@@ -1795,6 +1799,7 @@ static int _memory_write(memory_device_t dev, size_t offset, const void *data, s
 					return -EINVAL;
 			}
 		}
+		return (int)size;
 	}
 	return canopen_sdo_write(self, node_id, ofs, data, size);
 }
@@ -1809,6 +1814,52 @@ int canopen_send_event(memory_device_t canopen_mem, canopen_node_event_t ev){
 	return memory_write(canopen_mem, CANOPEN_INTERNAL_REG_EVENT, &ev_ch, 1);
 }
 
+static void _print_pdo(console_device_t con, const char *type, const struct canopen_pdo_entry *pdo){
+	if(pdo->cob_id & CANOPEN_COB_DISABLED){
+		console_printf(con, "%s: INACTIVE\n", type);
+		return;
+	} else {
+		console_printf(con, "%s: COB %04x, Type %02x\n", type, pdo->cob_id, pdo->type);
+	}
+
+	for(uint32_t m_id = 0; m_id < pdo->map_entries; m_id++){
+		uint32_t m = pdo->map[m_id];
+		if(!m) break;
+
+		uint32_t idx = (uint32_t)(m >> 8);
+		console_printf(con, "\t MAP %06x, ", idx);
+
+		switch(m & 0xff){
+			case CANOPEN_PDO_SIZE_32: {
+				console_printf(con, "U32");
+			} break;
+			case CANOPEN_PDO_SIZE_16: {
+				console_printf(con, "U16");
+			} break;
+			case CANOPEN_PDO_SIZE_8: {
+				console_printf(con, "U8");
+			} break;
+		}
+
+		console_printf(con, "\n");
+	}
+}
+
+static int _canopen_cmd(console_device_t con, void *ptr, int argc, char **argv){
+	struct canopen *self = (struct canopen*)ptr;
+	if(argc == 2 && strcmp(argv[1], "pdos") == 0){
+		for(uint16_t c = 0; c < CANOPEN_DEFAULT_TXPDO_COUNT; c++){
+			struct canopen_pdo_entry *pdo = &self->profile.txpdo[c];
+			_print_pdo(con, "TXPDO", pdo);
+		}
+		for(uint16_t c = 0; c < CANOPEN_DEFAULT_RXPDO_COUNT; c++){
+			struct canopen_pdo_entry *pdo = &self->profile.rxpdo[c];
+			_print_pdo(con, "RXPDO", pdo);
+		}
+	}
+	return 0;
+}
+
 int _canopen_probe(void *fdt, int fdt_node){
 	can_device_t can = can_find_by_ref(fdt, fdt_node, "can");
 	canopen_mode_t mode = (canopen_mode_t)fdt_get_int_or_default(fdt, fdt_node, "mode", CANOPEN_MASTER);
@@ -1816,6 +1867,7 @@ int _canopen_probe(void *fdt, int fdt_node){
 	uint32_t sync_cob_id = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "sync_cob_id", CANOPEN_COB_SYNC_OR_EMCY);
 	uint32_t sync_interval = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "sync_interval", 0);
 	uint8_t address = (uint8_t)fdt_get_int_or_default(fdt, fdt_node, "address", 0);
+	console_device_t console = console_find_by_ref(fdt, fdt_node, "console");
 
 	if(!can){
 		printk(PRINT_ERROR "canopen: can missing\n");
@@ -1836,6 +1888,10 @@ int _canopen_probe(void *fdt, int fdt_node){
 	self->address = address;
 	self->profile.sync_cob_id = sync_cob_id;
 	INIT_LIST_HEAD(&self->emcy_listeners);
+
+	if(console){
+		console_add_command(console, self, fdt_get_name(fdt, fdt_node, NULL), "CANOpen driver control", "", _canopen_cmd);
+	}
 
 	_canopen_send_event(self, CANOPEN_EV_BOOTING);
 
