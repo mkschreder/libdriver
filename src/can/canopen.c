@@ -1896,7 +1896,7 @@ int _canopen_probe(void *fdt, int fdt_node){
 	_canopen_send_event(self, CANOPEN_EV_BOOTING);
 
 	if(mode == CANOPEN_MASTER && sync_interval){
-		printk(PRINT_INFO "canopen: using sync interval %dms\n", sync_interval);
+		printk(PRINT_DEFAULT "canopen: using sync interval %dms\n", sync_interval);
 		_canopen_set_sync_period(self, sync_interval);
 	}
 

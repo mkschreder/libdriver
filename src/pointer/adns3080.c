@@ -364,7 +364,7 @@ int _adns3080_read(struct adns3080 *self, uint8_t *data){
 }
 
 void _adns3080_begin(struct adns3080 *self){
-    gpio_reset(self->gpio, self->cs_pin);
+    //gpio_reset(self->gpio, self->cs_pin);
 }
 
 void _adns3080_end(struct adns3080 *self){
@@ -484,32 +484,15 @@ int _adns3080_pointer_read(pointer_device_t dev, struct pointer_reading *data){
 	int ret = 0;
 	uint8_t motion = 0, xl = 0, yl = 0, qual = 0;
 
-	// THIS IS A TEST
-	printk("\x1b[2J");
-    int x = 0, y = 0;
-	for(int c = 0; c < 10000; c++){
-        ret |= _adns3080_write_reg(self, ADNS3080_MOTION, 0x01);
-        ret |= _adns3080_read_reg(self, ADNS3080_MOTION, &motion);
-        ret |= _adns3080_read_reg(self, ADNS3080_DELTA_X, &xl);
-        ret |= _adns3080_read_reg(self, ADNS3080_DELTA_Y, &yl);
-        ret |= _adns3080_read_reg(self, ADNS3080_SQUAL, &qual);
-        int xx = (int8_t)xl;
-        int yy = (int8_t)yl;
+    ret |= _adns3080_write_reg(self, ADNS3080_MOTION, 0x01);
+	ret |= _adns3080_read_reg(self, ADNS3080_MOTION, &motion);
+	ret |= _adns3080_read_reg(self, ADNS3080_DELTA_X, &xl);
+	ret |= _adns3080_read_reg(self, ADNS3080_DELTA_Y, &yl);
+	ret |= _adns3080_read_reg(self, ADNS3080_SQUAL, &qual);
 
-        memset(data, 0, sizeof(*data));
-
-        data->delta_x = (int16_t)xx;
-        data->delta_y = (int16_t)yy;
-
-        x += xx;
-        y += yy;
-
-		//printk("X: %d, Y: %d, Q: %d         \r", x, y, qual);
-		_adns3080_frame_capture(self);
-		thread_sleep_ms(10);
-	}
-	return 0;
-
+	data->delta_x = xl;
+	data->delta_y = yl;
+	data->quality = qual;
 
 	if((motion & 0x66) != 0x60) // check motion occured, chip on surface and in run mode
 		return -1;
@@ -523,37 +506,26 @@ static const struct pointer_device_ops _pointer_ops = {
 
 int _adns3080_probe(void *fdt, int fdt_node){
 	// find the spi device for com
-	int node = fdt_find_node_by_ref(fdt, fdt_node, "spi");
-	if(node < 0) {
-		dbg_printk("adns3080: nospi!\n");
-		return -EINVAL;
-	}
+    spi_device_t spi = spi_find_by_ref(fdt, fdt_node, "spi");
+    gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
+	uint32_t cs_pin = (uint32_t)fdt_get_int_or_default(fdt, (int)fdt_node, "cs", 0);
 
-    spi_device_t spi = spi_find_by_node(fdt, node);
     if(!spi) {
 		dbg_printk("adns3080: nospidev!\n");
 		return -EINVAL;
 	}
 
-    // find the spi device for com
-	node = fdt_find_node_by_ref(fdt, fdt_node, "gpio");
-	if(node < 0) {
-		dbg_printk("adns3080: nogpio!\n");
-		return -EINVAL;
-	}
-
-    gpio_device_t gpio = gpio_find_by_node(fdt, node);
     if(!gpio) {
 		dbg_printk("adns3080: nogpiodev!\n");
 		return -EINVAL;
 	}
-	uint32_t cs_pin = (uint32_t)fdt_get_int_or_default(fdt, (int)fdt_node, "cs", 0);
 
 	struct adns3080 *self = kzmalloc(sizeof(struct adns3080));
-    pointer_device_init(&self->dev, fdt_node, &_pointer_ops);
 	self->spi = spi;
     self->gpio = gpio;
 	self->cs_pin = cs_pin;
+
+    pointer_device_init(&self->dev, fdt, fdt_node, &_pointer_ops);
     pointer_device_register(&self->dev);
 
 	_adns3080_end(self); // ensure that the serial port is reset

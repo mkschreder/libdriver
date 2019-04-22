@@ -526,9 +526,10 @@ int _pmw3360_probe(void *fdt, int fdt_node){
 	}
 
 	struct pmw3360 *self = kzmalloc(sizeof(struct pmw3360));
-    pointer_device_init(&self->dev, fdt_node, &_pointer_ops);
 	self->spi = spi;
     self->gpio = gpio;
+
+    pointer_device_init(&self->dev, fdt, fdt_node, &_pointer_ops);
     pointer_device_register(&self->dev);
 
 	_pmw3360_end(self); // ensure that the serial port is reset

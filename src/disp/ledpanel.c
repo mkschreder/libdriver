@@ -81,6 +81,7 @@ void _ledpanel_task(void *data){
         scroll_cnt = (scroll_cnt + 1);
         if(scroll_cnt % 5 == 0) scroll = (scroll + 1) % self->fb_width;
     }
+	thread_sleep_ms(10);
 }
 
 int _ledpanel_write_pixel(display_device_t dev, int x, int y, color_t color){
@@ -136,7 +137,7 @@ int _ledpanel_probe(void *fdt, int fdt_node){
     gpio_reset(gpio, LEDPANEL_PIN_OE);
 
     struct ledpanel *self = kzmalloc(sizeof(struct ledpanel));
-    if(!self) return -1;
+    if(!self) return -ENOMEM;
 
 	display_device_init(&self->dev, fdt_node, &_display_ops);
 	display_device_register(&self->dev);
