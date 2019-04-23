@@ -13,6 +13,7 @@ libdriver_a_SOURCES=\
 	mem/at24.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
+	range/vl6180.c\
     usb/usbd_cdc.c\
 	tty/console.c\
 	vardir.c

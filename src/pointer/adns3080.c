@@ -364,7 +364,7 @@ int _adns3080_read(struct adns3080 *self, uint8_t *data){
 }
 
 void _adns3080_begin(struct adns3080 *self){
-    //gpio_reset(self->gpio, self->cs_pin);
+    gpio_reset(self->gpio, self->cs_pin);
 }
 
 void _adns3080_end(struct adns3080 *self){

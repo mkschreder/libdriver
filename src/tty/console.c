@@ -261,7 +261,7 @@ static int con_readline(struct console *self, char *line, size_t size){
 	int rd;
 	char ch;
 	int pos = 0;
-	while((rd = serial_read(self->serial, &ch, 1, THREAD_QUEUE_MAX_DELAY)) > 0){
+	while((rd = serial_read(self->serial, &ch, 1, THREAD_SLEEP_MAX_DELAY)) > 0){
 		// emulate backspace correctly
 		if(ch == 0x08 || ch == 0x7f){
 			//serial_write(self->serial, "\x1b[D \x1b[D", 7);
@@ -379,7 +379,7 @@ static const struct console_device_ops _console_ops = {
 
 static int _console_file_read(struct _reent *r, void *ptr, char *buf, int size){
 	struct console *self = (struct console*)ptr;
-	return serial_read(self->serial, buf, (size_t)size, THREAD_QUEUE_MAX_DELAY);
+	return serial_read(self->serial, buf, (size_t)size, THREAD_SLEEP_MAX_DELAY);
 }
 
 static int _console_file_write(struct _reent *r, void *ptr, const char *buf, int size){

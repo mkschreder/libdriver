@@ -150,6 +150,7 @@ am_libdriver_a_OBJECTS = accgyro/libdriver_a-mpu6500.$(OBJEXT) \
 	mem/libdriver_a-at24.$(OBJEXT) \
 	pointer/libdriver_a-pmw3360.$(OBJEXT) \
 	pointer/libdriver_a-adns3080.$(OBJEXT) \
+	range/libdriver_a-vl6180.$(OBJEXT) \
 	usb/libdriver_a-usbd_cdc.$(OBJEXT) \
 	tty/libdriver_a-console.$(OBJEXT) libdriver_a-vardir.$(OBJEXT)
 libdriver_a_OBJECTS = $(am_libdriver_a_OBJECTS)
@@ -360,6 +361,7 @@ libdriver_a_SOURCES = \
 	mem/at24.c\
     pointer/pmw3360.c\
     pointer/adns3080.c\
+	range/vl6180.c\
     usb/usbd_cdc.c\
 	tty/console.c\
 	vardir.c
@@ -545,6 +547,14 @@ pointer/libdriver_a-pmw3360.$(OBJEXT): pointer/$(am__dirstamp) \
 	pointer/$(DEPDIR)/$(am__dirstamp)
 pointer/libdriver_a-adns3080.$(OBJEXT): pointer/$(am__dirstamp) \
 	pointer/$(DEPDIR)/$(am__dirstamp)
+range/$(am__dirstamp):
+	@$(MKDIR_P) range
+	@: > range/$(am__dirstamp)
+range/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) range/$(DEPDIR)
+	@: > range/$(DEPDIR)/$(am__dirstamp)
+range/libdriver_a-vl6180.$(OBJEXT): range/$(am__dirstamp) \
+	range/$(DEPDIR)/$(am__dirstamp)
 usb/$(am__dirstamp):
 	@$(MKDIR_P) usb
 	@: > usb/$(am__dirstamp)
@@ -578,6 +588,7 @@ mostlyclean-compile:
 	-rm -f hbridge/*.$(OBJEXT)
 	-rm -f mem/*.$(OBJEXT)
 	-rm -f pointer/*.$(OBJEXT)
+	-rm -f range/*.$(OBJEXT)
 	-rm -f tty/*.$(OBJEXT)
 	-rm -f usb/*.$(OBJEXT)
 
@@ -598,6 +609,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/libdriver_a-at24.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-adns3080.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-pmw3360.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@range/$(DEPDIR)/libdriver_a-vl6180.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tty/$(DEPDIR)/libdriver_a-console.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@usb/$(DEPDIR)/libdriver_a-usbd_cdc.Po@am__quote@
 
@@ -807,6 +819,20 @@ pointer/libdriver_a-adns3080.obj: pointer/adns3080.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o pointer/libdriver_a-adns3080.obj `if test -f 'pointer/adns3080.c'; then $(CYGPATH_W) 'pointer/adns3080.c'; else $(CYGPATH_W) '$(srcdir)/pointer/adns3080.c'; fi`
 
+range/libdriver_a-vl6180.o: range/vl6180.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT range/libdriver_a-vl6180.o -MD -MP -MF range/$(DEPDIR)/libdriver_a-vl6180.Tpo -c -o range/libdriver_a-vl6180.o `test -f 'range/vl6180.c' || echo '$(srcdir)/'`range/vl6180.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) range/$(DEPDIR)/libdriver_a-vl6180.Tpo range/$(DEPDIR)/libdriver_a-vl6180.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='range/vl6180.c' object='range/libdriver_a-vl6180.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o range/libdriver_a-vl6180.o `test -f 'range/vl6180.c' || echo '$(srcdir)/'`range/vl6180.c
+
+range/libdriver_a-vl6180.obj: range/vl6180.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT range/libdriver_a-vl6180.obj -MD -MP -MF range/$(DEPDIR)/libdriver_a-vl6180.Tpo -c -o range/libdriver_a-vl6180.obj `if test -f 'range/vl6180.c'; then $(CYGPATH_W) 'range/vl6180.c'; else $(CYGPATH_W) '$(srcdir)/range/vl6180.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) range/$(DEPDIR)/libdriver_a-vl6180.Tpo range/$(DEPDIR)/libdriver_a-vl6180.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='range/vl6180.c' object='range/libdriver_a-vl6180.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o range/libdriver_a-vl6180.obj `if test -f 'range/vl6180.c'; then $(CYGPATH_W) 'range/vl6180.c'; else $(CYGPATH_W) '$(srcdir)/range/vl6180.c'; fi`
+
 usb/libdriver_a-usbd_cdc.o: usb/usbd_cdc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT usb/libdriver_a-usbd_cdc.o -MD -MP -MF usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo -c -o usb/libdriver_a-usbd_cdc.o `test -f 'usb/usbd_cdc.c' || echo '$(srcdir)/'`usb/usbd_cdc.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) usb/$(DEPDIR)/libdriver_a-usbd_cdc.Tpo usb/$(DEPDIR)/libdriver_a-usbd_cdc.Po
@@ -988,6 +1014,8 @@ distclean-generic:
 	-rm -f mem/$(am__dirstamp)
 	-rm -f pointer/$(DEPDIR)/$(am__dirstamp)
 	-rm -f pointer/$(am__dirstamp)
+	-rm -f range/$(DEPDIR)/$(am__dirstamp)
+	-rm -f range/$(am__dirstamp)
 	-rm -f tty/$(DEPDIR)/$(am__dirstamp)
 	-rm -f tty/$(am__dirstamp)
 	-rm -f usb/$(DEPDIR)/$(am__dirstamp)
@@ -1002,7 +1030,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1048,7 +1076,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
