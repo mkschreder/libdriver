@@ -490,8 +490,8 @@ int _adns3080_pointer_read(pointer_device_t dev, struct pointer_reading *data){
 	ret |= _adns3080_read_reg(self, ADNS3080_DELTA_Y, &yl);
 	ret |= _adns3080_read_reg(self, ADNS3080_SQUAL, &qual);
 
-	data->delta_x = xl;
-	data->delta_y = yl;
+	data->delta_x = (int8_t)xl;
+	data->delta_y = (int8_t)yl;
 	data->quality = qual;
 
 	if((motion & 0x66) != 0x60) // check motion occured, chip on surface and in run mode
