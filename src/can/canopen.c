@@ -1870,7 +1870,8 @@ static int _canopen_cmd_read(console_device_t con, struct canopen *self, int arg
 		return -EIO;
 	}
 
-	console_printf(con, "%02x.%04x.%02x: 0x08x\n", node, sdo, sub, data);
+	console_printf(con, "%02x.%04x.%02x: 0x%08x (%d)\n", node, sdo, sub, data, data);
+	return 0;
 usage:
 	console_printf(con, "Usage: %s read <node(00-ff)> <sdo(0000-ffff)> <sub(00-ff)>\n", argv[0]);
 	return -EINVAL;
