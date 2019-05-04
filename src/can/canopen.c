@@ -1845,6 +1845,37 @@ static void _print_pdo(console_device_t con, const char *type, const struct cano
 	}
 }
 
+static int _canopen_cmd_read(console_device_t con, struct canopen *self, int argc, char **argv){
+	if(argc != 5){
+		goto usage;
+	}
+
+	unsigned int node = 0;
+	unsigned int sdo = 0;
+	unsigned int sub = 0;
+
+	if(sscanf(argv[2], "%x", &node) != 1) goto usage;
+	if(sscanf(argv[3], "%x", &sdo) != 1) goto usage;
+	if(sscanf(argv[4], "%x", &sub) != 1) goto usage;
+
+	if(node > 0xff || sdo > 0xffff || sub > 0xff){
+		console_printf(con, PRINT_ERROR "canopen: values out of range\n");
+		goto usage;
+	}
+
+	uint32_t data = 0;
+	int r = canopen_sdo_read_u32(self, (uint8_t)node, sdo << 8 | sub, &data);
+	if(r < 0) {
+		console_printf(con, PRINT_ERROR "canopen: unable to read sdo: %s\n", canopen_strerror(r));
+		return -EIO;
+	}
+
+	console_printf(con, "%02x.%04x.%02x: 0x08x\n", node, sdo, sub, data);
+usage:
+	console_printf(con, "Usage: %s read <node(00-ff)> <sdo(0000-ffff)> <sub(00-ff)>\n", argv[0]);
+	return -EINVAL;
+}
+
 static int _canopen_cmd(console_device_t con, void *ptr, int argc, char **argv){
 	struct canopen *self = (struct canopen*)ptr;
 	if(argc == 2 && strcmp(argv[1], "pdos") == 0){
@@ -1856,6 +1887,8 @@ static int _canopen_cmd(console_device_t con, void *ptr, int argc, char **argv){
 			struct canopen_pdo_entry *pdo = &self->profile.rxpdo[c];
 			_print_pdo(con, "RXPDO", pdo);
 		}
+	} else if(argc >= 2 && strcmp(argv[1], "read") == 0){
+		return _canopen_cmd_read(con, self, argc, argv);
 	}
 	return 0;
 }
