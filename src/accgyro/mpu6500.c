@@ -28,9 +28,6 @@
 #define MPU6500_REQUEST_TIMEOUT 100
 
 #define MPU_DEFAULT_I2C_ADDR    0x68
-// MPU6050
-#define MPU_RA_WHO_AM_I         0x75
-#define MPU_RA_WHO_AM_I_LEGACY  0x00
 
 #define MPU_RA_XG_OFFS_TC       0x00    //[7] PWR_MODE, [6:1] XG_OFFS_TC, [0] OTP_BNK_VLD
 #define MPU_RA_YG_OFFS_TC       0x01    //[7] PWR_MODE, [6:1] YG_OFFS_TC, [0] OTP_BNK_VLD
@@ -127,177 +124,203 @@
 #define MPU6500_ID              (0x70)
 #define MPUx0x0_ID              (0x68)
 #define MPU9250_ID              (0x71)
+#define ICM20689_ID (0x98)
 
 #define MPU6500_BIT_RESET                   (0x80)
 
 enum {
-    MPU_GYRO_FSR_250DPS = 0,
-    MPU_GYRO_FSR_500DPS,
-    MPU_GYRO_FSR_1000DPS,
-    MPU_GYRO_FSR_2000DPS,
+	MPU_GYRO_FSR_250DPS = 0,
+	MPU_GYRO_FSR_500DPS,
+	MPU_GYRO_FSR_1000DPS,
+	MPU_GYRO_FSR_2000DPS,
 };
 
 enum {
-    MPU_CLK_INTERNAL = 0,
-    MPU_CLK_PLL
+	MPU_CLK_INTERNAL = 0,
+	MPU_CLK_PLL
 };
 
 enum {
-    MPU_ACC_FSR_2G = 0,
-    MPU_ACC_FSR_4G,
-    MPU_ACC_FSR_8G,
-    MPU_ACC_FSR_16G
+	MPU_ACC_FSR_2G = 0,
+	MPU_ACC_FSR_4G,
+	MPU_ACC_FSR_8G,
+	MPU_ACC_FSR_16G
 };
 
 enum {
-    MPU_FILTER_256HZ_NOLPF2 = 0,
-    MPU_FILTER_188HZ,
-    MPU_FILTER_98HZ,
-    MPU_FILTER_42HZ,
-    MPU_FILTER_20HZ,
-    MPU_FILTER_10HZ,
-    MPU_FILTER_5HZ,
-    MPU_FILTER_2100HZ_NOLPF
+	MPU_FILTER_256HZ_NOLPF2 = 0,
+	MPU_FILTER_188HZ,
+	MPU_FILTER_98HZ,
+	MPU_FILTER_42HZ,
+	MPU_FILTER_20HZ,
+	MPU_FILTER_10HZ,
+	MPU_FILTER_5HZ,
+	MPU_FILTER_2100HZ_NOLPF
 };
 
 #define MPU6500_TIMEOUT 100
 
 struct mpu6500 {
-    struct imu_device dev;
-    i2c_device_t i2c;
-    spi_device_t spi;
-    uint8_t chip_id;
+	struct imu_device dev;
+	i2c_device_t i2c;
+	spi_device_t spi;
+	uint8_t chip_id;
+	gpio_device_t gpio;
+	uint32_t cs_pin;
 };
 
-int _spi_read_reg(spi_device_t spi, uint8_t reg, uint8_t *data){
-#if 0
-    uint8_t tx[2] = {reg | 0x80, 0};
-    uint8_t rx[2] = {0, 0};
-    // try to read out the id of the chip
-    if(spi_transfer(spi, tx, rx, 1, MPU6500_REQUEST_TIMEOUT) < 0) {
-        return -EIO;
-    }
-    *data = rx[1];
-#endif
-    return 1;
+static int _mpu6500_read_reg(struct mpu6500 *self, uint8_t reg, uint8_t *data) {
+	uint8_t tx[2] = {reg | 0x80, 0};
+	uint8_t rx[2]= {0, 0};
+	// try to read out the id of the chip
+	if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 2, MPU6500_REQUEST_TIMEOUT) < 0) {
+		return -EIO;
+	}
+	*data = rx[1];
+	return 1;
 }
 
-static int _mpu6500_write_reg(struct mpu6500 *self, uint8_t reg, uint8_t data){
-    if(self->i2c){
+static int _mpu6500_write_reg(struct mpu6500 *self, uint8_t reg, uint8_t data) {
+	if(self->i2c) {
 		uint8_t buf[2] = {reg, data};
-        return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, buf, 2, NULL, 0, MPU6500_TIMEOUT);
-    }
-    return -EINVAL;
+		return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, buf, 2, NULL, 0, MPU6500_TIMEOUT);
+	} else if(self->spi) {
+		uint8_t tx[2] = {reg, data};
+		uint8_t rx[2]= {0, 0};
+		// try to read out the id of the chip
+		if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 2, MPU6500_REQUEST_TIMEOUT) < 0) {
+			return -EIO;
+		}
+		return 1;
+	}
+	return -EINVAL;
 }
 
-static int _mpu6500_read_buf(struct mpu6500 *self, uint8_t reg, uint8_t *data, size_t len){
-    if(self->i2c){
-        return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, &reg, 1, data, len, MPU6500_TIMEOUT);
-    }
-    return -EINVAL;
+static int _mpu6500_read_buf(struct mpu6500 *self, uint8_t reg, uint8_t *data, size_t len) {
+	if(self->i2c) {
+		return i2c_transfer(self->i2c, MPU_DEFAULT_I2C_ADDR, &reg, 1, data, len, MPU6500_TIMEOUT);
+	} else if(self->spi) {
+		uint8_t tx[0xf + 1] = {reg | 0x80, 0};
+		uint8_t rx[0xf + 1]= {0};
+		// try to read out the id of the chip
+		if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 1 + (len & 0xf), MPU6500_REQUEST_TIMEOUT) < 0) {
+			return -EIO;
+		}
+		memcpy(data, rx + 1, len & 0xf);
+		return (int)len;
+	}
+	return -EINVAL;
 }
 
-static void _mpu6500_configure(struct mpu6500 *self){
-    _mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, MPU6500_BIT_RESET);
-    thread_sleep_ms(100);
-    _mpu6500_write_reg(self, MPU_RA_SIGNAL_PATH_RESET, 0x07);
-    thread_sleep_ms(100);
-    _mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, 0);
-    thread_sleep_ms(100);
-    _mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, MPU_CLK_PLL);
-    thread_sleep_ms(150);
-    _mpu6500_write_reg(self, MPU_RA_GYRO_CONFIG, MPU_GYRO_FSR_2000DPS << 3);
-    thread_sleep_ms(150);
-    _mpu6500_write_reg(self, MPU_RA_ACCEL_CONFIG, MPU_ACC_FSR_2G << 3);
-    thread_sleep_ms(150);
-    _mpu6500_write_reg(self, MPU_RA_CONFIG, MPU_FILTER_2100HZ_NOLPF);
-    thread_sleep_ms(150);
-    _mpu6500_write_reg(self, MPU_RA_SMPLRT_DIV, 0);
-    thread_sleep_ms(100);
-    _mpu6500_write_reg(self, MPU_RA_INT_PIN_CFG, 0 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 0 << 3 | 0 << 2 | 0 << 1 | 0 << 0);  // INT_ANYRD_2CLEAR, BYPASS_EN
-    //_mpu6500_write_reg(MPU_RA_INT_ENABLE, 0x01); // RAW_RDY_EN interrupt enable
+static void _mpu6500_configure(struct mpu6500 *self) {
+	_mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, MPU6500_BIT_RESET);
+	thread_sleep_ms(100);
+	// set I2C dis bit
+	if(self->spi) {
+		_mpu6500_write_reg(self, MPU_RA_USER_CTRL, 0x10);
+	}
+	//_mpu6500_write_reg(self, MPU_RA_SIGNAL_PATH_RESET, 0x07);
+	//thread_sleep_ms(100);
+	_mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, 0);
+	thread_sleep_ms(100);
+	_mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, MPU_CLK_PLL);
+	thread_sleep_ms(150);
+	_mpu6500_write_reg(self, MPU_RA_GYRO_CONFIG, MPU_GYRO_FSR_2000DPS << 3);
+	thread_sleep_ms(150);
+	_mpu6500_write_reg(self, MPU_RA_ACCEL_CONFIG, MPU_ACC_FSR_2G << 3);
+	thread_sleep_ms(150);
+	_mpu6500_write_reg(self, MPU_RA_FF_THR, 0x03);
+	thread_sleep_ms(150);
+	_mpu6500_write_reg(self, MPU_RA_CONFIG, 0x3);
+	thread_sleep_ms(150);
+	_mpu6500_write_reg(self, MPU_RA_SMPLRT_DIV, 0);
+	thread_sleep_ms(100);
+	//_mpu6500_write_reg(self, MPU_RA_INT_PIN_CFG, 0 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 0 << 3 | 0 << 2 | 0 << 1 | 0 << 0);  // INT_ANYRD_2CLEAR, BYPASS_EN
+	//_mpu6500_write_reg(MPU_RA_INT_ENABLE, 0x01); // RAW_RDY_EN interrupt enable
 }
 
-int _mpu6500_read(imu_device_t dev, struct imu_reading *data){
-    struct mpu6500 *self = container_of(dev, struct mpu6500, dev.ops);
-    uint8_t raw[6];
-    _mpu6500_read_buf(self, MPU_RA_ACCEL_XOUT_H, raw, 6);
+int _mpu6500_read(imu_device_t dev, struct imu_reading *data) {
+	struct mpu6500 *self = container_of(dev, struct mpu6500, dev.ops);
+	uint8_t raw[6];
+	if(_mpu6500_read_buf(self, MPU_RA_ACCEL_XOUT_H, raw, 6) < 0) {
+		return -EIO;
+	}
 
-    int16_t acc[3];
-    acc[0] = (int16_t)((raw[0] << 8) | raw[1]);
-    acc[1] = (int16_t)((raw[2] << 8) | raw[3]);
-    acc[2] = (int16_t)((raw[4] << 8) | raw[5]);
+	data->ax = (int16_t)((raw[0] << 8) | raw[1]);
+	data->ay = (int16_t)((raw[2] << 8) | raw[3]);
+	data->az = (int16_t)((raw[4] << 8) | raw[5]);
 
-    data->ax = acc[0];
-    data->ay = acc[1];
-    data->az = acc[2];
+	if(_mpu6500_read_buf(self, MPU_RA_GYRO_XOUT_H, raw, 6) < 0) {
+		return -EIO;
+	}
 
-	return 0;
+	data->gx = (int16_t)((raw[0] << 8) | raw[1]);
+	data->gy = (int16_t)((raw[2] << 8) | raw[3]);
+	data->gz = (int16_t)((raw[4] << 8) | raw[5]);
+
+	return 6;
 }
 
 static const struct imu_device_ops _imu_ops = {
-    .read = _mpu6500_read
+	.read = _mpu6500_read
 };
 
-int _mpu6500_probe(void *fdt, int fdt_node){
-    // find the spi device fdt node
+int _mpu6500_probe(void *fdt, int fdt_node) {
+	// find the spi device fdt node
 	int bus = fdt_find_node_by_ref(fdt, fdt_node, "bus");
 	if(bus < 0) {
 		dbg_printk("mpu6500: nobus!\n");
 		return -EINVAL;
 	}
 
-    spi_device_t spi = spi_find_by_node(fdt, bus);
-    i2c_device_t i2c = i2c_find_by_node(fdt, bus);
-    if(!spi && !i2c) {
+	thread_sleep_ms(60); // startup delay
+
+	spi_device_t spi = spi_find_by_node(fdt, bus);
+	i2c_device_t i2c = i2c_find_by_node(fdt, bus);
+	if(!spi && !i2c) {
 		dbg_printk("mpu6500: nobus!\n");
 		return -EINVAL;
 	}
 
-    uint8_t sig = 0;
-    if(i2c){
-		uint8_t reg = MPU_RA_WHO_AM_I;
-        if(i2c_transfer(i2c, MPU_DEFAULT_I2C_ADDR, &reg, 1, &sig, 1, MPU6500_TIMEOUT) < 0){
-            dbg_printk("mpu: errio\n");
-            return -1;
-        }
+	gpio_device_t gpio = gpio_find_by_ref(fdt, fdt_node, "gpio");
+	uint32_t cs_pin = (uint32_t)fdt_get_int_or_default(fdt, fdt_node, "cs_pin", 0);
 
-        if(sig != 0){
-            dbg_printk("mpu@i2c: ");
-            if(sig == MPU6500_ID) dbg_printk("mpu6500\n");
-            else if(sig == MPU9250_ID) dbg_printk("mpu9250\n");
-            else dbg_printk("unknown\n");
-        } else {
-            dbg_printk("mpu: fail\n");
-        }
-    } else if(spi){
-        if(_spi_read_reg(spi, MPU_RA_WHO_AM_I, &sig) < 0){
-            dbg_printk("mpu: errio\n");
-            return -1;
-        }
+	if(!gpio) {
+		dbg_printk("mpu6500: no gpio for cs pin\n");
+		return -EINVAL;
+	}
 
-        if(sig != 0){
-            dbg_printk("mpu@spi: ");
-            if(sig == MPU6500_ID) dbg_printk("mpu6500\n");
-            else if(sig == MPU9250_ID) dbg_printk("mpu9250\n");
-            else dbg_printk("unknown\n");
-        } else {
-            dbg_printk("mpu: fail\n");
-        }
-    }
+	struct mpu6500 *self = kzmalloc(sizeof(struct mpu6500));
+	self->i2c = i2c;
+	self->spi = spi;
+	self->gpio = gpio;
+	self->cs_pin = cs_pin;
 
-    struct mpu6500 *self = kzmalloc(sizeof(struct mpu6500));
-    imu_device_init(&self->dev, fdt_node, &_imu_ops);
-    self->i2c = i2c;
-    self->spi = spi;
-    self->chip_id = sig;
-    _mpu6500_configure(self);
-    imu_device_register(&self->dev);
-    return 0;
+	_mpu6500_configure(self);
+
+	uint8_t sig = 0;
+	if(_mpu6500_read_reg(self, MPU_RA_WHO_AM_I, &sig) < 0) {
+		dbg_printk(PRINT_ERROR "mpu6500: could not communicate with device\n");
+		return -1;
+	}
+
+	if(sig == MPU6500_ID) dbg_printk("mpu6500: found mpu6500\n");
+	else if(sig == MPU9250_ID) dbg_printk("mpu6500: found mpu9250\n");
+	else if(sig == ICM20689_ID) dbg_printk("mpu6500: found icm20689\n");
+	else dbg_printk(PRINT_ERROR "mpu6500: unknown device (%02x)\n", sig);
+
+	self->chip_id = sig;
+
+	imu_device_init(&self->dev, fdt, fdt_node, &_imu_ops);
+	imu_device_register(&self->dev);
+
+	printk(PRINT_SUCCESS "mpu6500: ready!\n");
+
+	return 0;
 }
 
-int _mpu6500_remove(void *fdt, int fdt_node){
-    return 0;
+int _mpu6500_remove(void *fdt, int fdt_node) {
+	return 0;
 }
 
 DEVICE_DRIVER(mpu6500, "inv,mpu6500", _mpu6500_probe, _mpu6500_remove)
