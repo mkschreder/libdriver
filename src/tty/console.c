@@ -42,6 +42,8 @@
 #define CONSOLE_MAX_LINE 80
 #define CONSOLE_MAX_ARGS 16
 
+#define CONSOLE_KEY_ARROW_UP 0x41
+
 struct console {
 	struct console_device dev;
 
@@ -57,6 +59,7 @@ struct console {
 #endif
 	char printf_buffer[CONSOLE_MAX_LINE];
 	char line[CONSOLE_MAX_LINE];
+	char prev_line[CONSOLE_MAX_LINE];
 	char *argv[CONSOLE_MAX_ARGS];
 
 	vardir_device_t vardir;
@@ -127,8 +130,57 @@ static int _compare_tasks(const void *a, const void *b){
 }
 #endif
 #endif
-static int _cmd_ps(struct console *self, int argc, char **argv){
-	(void)self;
+
+typedef enum {
+	HEX_8,
+	HEX_32
+} hex_format_t;
+
+static void _dump_hex(console_device_t con, void *addr, hex_format_t format){
+	console_printf(con, "0x%08x: ", addr);
+	switch(format){
+		case HEX_8:
+			for(int c = 0;c < 16; c++){
+				console_printf(con, "%02x ", *((uint8_t*)addr + c));
+			}
+			break;
+		case HEX_32:
+			for(int c = 0;c < 4; c++){
+				console_printf(con, "%08x ", *((uint32_t*)addr + c));
+			}
+			break;
+	}
+	console_printf(con, "\n");
+}
+
+static int _cmd_md(console_device_t con, void *ptr, int argc, char **argv){
+	hex_format_t format = HEX_8;
+	unsigned int addr = 0;
+	if(argc == 2){
+		int r = sscanf(argv[1], "%x", &addr);
+		if(r != 1){
+			goto usage;
+		}
+	} else if(argc == 3){
+		int r = sscanf(argv[2], "%x", &addr);
+		if(r != 1){
+			goto usage;
+		}
+		if(strcmp(argv[1], "x8") == 0){
+			format = HEX_8;
+		} else if(strcmp(argv[1], "x32") == 0){
+			format = HEX_32;
+		}
+	}
+	_dump_hex(con, (void*)addr, format);
+	return 0;
+usage:
+	console_printf(con, "Usage: %s [format:x32|x8] <hex addr>\n");
+	return -1;
+}
+
+static int _cmd_ps(console_device_t con, void *ptr, int argc, char **argv){
+	(void)con;
 	(void)argc;
 	(void)argv;
 	thread_meminfo();
@@ -273,15 +325,23 @@ static int con_readline(struct console *self, char *line, size_t size){
 		} else if(ch == '\n'){
 			// skip new lines (we expect carriage returns from now on)
 			continue;
-		}
-		serial_write(self->serial, &ch, 1, CONSOLE_WRITE_TIMEOUT);
-		if(ch == '\r') {
+		} else if(ch == '\r') {
 			// echo a new line
 			char nl = '\n';
 			serial_write(self->serial, &nl, 1, CONSOLE_WRITE_TIMEOUT);
 			break;
+		} else if(ch == CONSOLE_KEY_ARROW_UP){
+			char *p = strncpy(line, self->prev_line, size);
+			size_t len = (size_t)(p - line);
+			serial_write(self->serial, line, (size_t)len, CONSOLE_WRITE_TIMEOUT);
+			pos = (int)len;
+		} else if(ch > 0xf && ch < 127){
+			serial_write(self->serial, &ch, 1, CONSOLE_WRITE_TIMEOUT);
+			line[pos++] = ch;
+		} else {
+			printk("%02x ", ch);
 		}
-		line[pos++] = ch;
+
 		if(size > 0 && ((size_t)pos == (size - 1))) break;
 	}
 	line[pos] = 0;
@@ -339,9 +399,6 @@ static void _console_device_task(void *ptr){
 			_console_printf(&self->dev.ops, "ERROR (%d): %s\n", -err, strerror(-err));
 		} else if(!handled){
 			if(0) {}
-			else if(strcmp("ps", self->argv[0]) == 0){
-				_cmd_ps(self, argc, self->argv);
-			}
 			else if(strcmp("set", self->argv[0]) == 0){
 				_cmd_set(self, argc, self->argv);
 			}
@@ -410,6 +467,9 @@ int _console_probe(void *fdt, int fdt_node){
 
 	console_device_init(&self->dev, fdt, fdt_node, &_console_ops);
 	console_device_register(&self->dev);
+
+	console_add_command(&self->dev.ops, self, "ps", "Show list of processes", "", _cmd_ps);
+	console_add_command(&self->dev.ops, self, "md", "Dump raw memory location", "", _cmd_md);
 
 	if(thread_create(
 		  _console_device_task,

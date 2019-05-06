@@ -25,6 +25,8 @@
 
 #include <libfdt/libfdt.h>
 
+#include <math.h>
+
 #define MPU6500_REQUEST_TIMEOUT 100
 
 #define MPU_DEFAULT_I2C_ADDR    0x68
@@ -167,6 +169,7 @@ struct mpu6500 {
 	uint8_t chip_id;
 	gpio_device_t gpio;
 	uint32_t cs_pin;
+	float acc_scale, gyr_scale;
 };
 
 static int _mpu6500_read_reg(struct mpu6500 *self, uint8_t reg, uint8_t *data) {
@@ -226,8 +229,10 @@ static void _mpu6500_configure(struct mpu6500 *self) {
 	_mpu6500_write_reg(self, MPU_RA_PWR_MGMT_1, MPU_CLK_PLL);
 	thread_sleep_ms(150);
 	_mpu6500_write_reg(self, MPU_RA_GYRO_CONFIG, MPU_GYRO_FSR_2000DPS << 3);
+	self->gyr_scale = (65535.f / 2.f) / 2000.f / 180.f * M_PI;
 	thread_sleep_ms(150);
 	_mpu6500_write_reg(self, MPU_RA_ACCEL_CONFIG, MPU_ACC_FSR_2G << 3);
+	self->acc_scale = 1.f / ((65535.f / 2.f) / 2.f);
 	thread_sleep_ms(150);
 	_mpu6500_write_reg(self, MPU_RA_FF_THR, 0x03);
 	thread_sleep_ms(150);
@@ -241,22 +246,24 @@ static void _mpu6500_configure(struct mpu6500 *self) {
 
 int _mpu6500_read(imu_device_t dev, struct imu_reading *data) {
 	struct mpu6500 *self = container_of(dev, struct mpu6500, dev.ops);
+	memset(data, 0, sizeof(struct imu_reading));
+
 	uint8_t raw[6];
 	if(_mpu6500_read_buf(self, MPU_RA_ACCEL_XOUT_H, raw, 6) < 0) {
 		return -EIO;
 	}
 
-	data->ax = (int16_t)((raw[0] << 8) | raw[1]);
-	data->ay = (int16_t)((raw[2] << 8) | raw[3]);
-	data->az = (int16_t)((raw[4] << 8) | raw[5]);
+	data->ax = self->acc_scale * (int16_t)((raw[0] << 8) | raw[1]);
+	data->ay = self->acc_scale * (int16_t)((raw[2] << 8) | raw[3]);
+	data->az = self->acc_scale * (int16_t)((raw[4] << 8) | raw[5]);
 
 	if(_mpu6500_read_buf(self, MPU_RA_GYRO_XOUT_H, raw, 6) < 0) {
 		return -EIO;
 	}
 
-	data->gx = (int16_t)((raw[0] << 8) | raw[1]);
-	data->gy = (int16_t)((raw[2] << 8) | raw[3]);
-	data->gz = (int16_t)((raw[4] << 8) | raw[5]);
+	data->gx = self->gyr_scale * (int16_t)((raw[0] << 8) | raw[1]);
+	data->gy = self->gyr_scale * (int16_t)((raw[2] << 8) | raw[3]);
+	data->gz = self->gyr_scale * (int16_t)((raw[4] << 8) | raw[5]);
 
 	return 6;
 }

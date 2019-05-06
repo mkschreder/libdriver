@@ -355,7 +355,7 @@ static int _lss_scan_request(struct canopen *self){
 
 	// setup timer and enter wait state
 	self->lss.confirmed = false;
-	self->lss.timeout = micros() + CANOPEN_LSS_FASTSCAN_TIMEOUT_MS * 1000U;
+	self->lss.timeout = timestamp_from_now_ms(CANOPEN_LSS_FASTSCAN_TIMEOUT_MS);
 	self->lss.state = CANOPEN_LSS_STATE_SCAN_WAIT_CONFIRM;
 
 	// send out lss message
@@ -394,7 +394,7 @@ static void _process_lss_timeouts(struct canopen *self){
 	switch(self->lss.state){
 		case CANOPEN_LSS_STATE_SCAN_WAIT_CONFIRM: {
 			// we must always wait for timeout because multiple nodes may respond to the same message. We want to wait until all nodes have responded.
-			if(time_after(micros(), self->lss.timeout)) {
+			if(timestamp_expired(self->lss.timeout)) {
 				if(self->lss.bit >= 0){
 					if(self->lss.confirmed){
 						canopen_debug("LSS master: %d bits confirmed\n", 32 - self->lss.bit);
@@ -439,7 +439,7 @@ static void _process_lss_timeouts(struct canopen *self){
 		} break;
 		case CANOPEN_LSS_STATE_ENABLE_WAIT_CONFIRM: {
 			// wait for timeout regardless of whether we get a reply or not. Since LSS works this way.
-			if(time_after(micros(), self->lss.timeout)) {
+			if(timestamp_expired(self->lss.timeout)) {
 				// if no node confirmed the request then we bail out with an error
 				if(!self->lss.confirmed){
 					self->lss.req.result = -ETIMEDOUT;
@@ -459,7 +459,7 @@ static void _process_lss_timeouts(struct canopen *self){
 		} break;
 		case CANOPEN_LSS_STATE_SET_ID_WAIT_CONFIRM: {
 			// id 
-			if(time_after(micros(), self->lss.timeout)){
+			if(timestamp_expired(self->lss.timeout)){
 				// the request timed out
 				self->lss.req.result = -ETIMEDOUT;
 				_canopen_lss_complete_request(self);
@@ -925,9 +925,9 @@ static void _service_runner(struct canopen *self){
 	//struct canopen *self = container_of(work, struct canopen, work);
 
 	// handle timeout of the sdo request
-	timestamp_t t = micros();
+	timestamp_t t = timestamp();
 	if(self->sdo.req.running){
-		if(time_after(t, self->sdo.req.timeout)) {
+		if(timestamp_after(t, self->sdo.req.timeout)) {
 			self->sdo.req.result = -ETIMEDOUT;
 			self->sdo.req.running = false;
 			thread_sem_give(&self->sdo.req.done);
@@ -1313,7 +1313,7 @@ int canopen_sdo_read(struct canopen *self, uint8_t node_id, uint32_t dict, void 
 	self->sdo.req.id = dict;
 	self->sdo.req.output = data;
 	self->sdo.req.output_len = size;
-	self->sdo.req.timeout = micros() + CANOPEN_SDO_TIMEOUT_MS * 1000U;
+	self->sdo.req.timeout = timestamp_from_now_ms(CANOPEN_SDO_TIMEOUT_MS);
 	self->sdo.req.result = 0;
 
 	// start the request
@@ -1388,7 +1388,7 @@ int canopen_sdo_write(struct canopen *self, uint8_t node_id, uint32_t dict, cons
 	self->sdo.req.cmd = CANOPEN_SDO_CMD_WRITE;
 	self->sdo.req.node_id = node_id;
 	self->sdo.req.id = dict;
-	self->sdo.req.timeout = micros() + CANOPEN_SDO_TIMEOUT_MS * 1000U;
+	self->sdo.req.timeout = timestamp_from_now_ms(CANOPEN_SDO_TIMEOUT_MS);
 	self->sdo.req.result = -1;
 	self->sdo.req.running = true;
 
