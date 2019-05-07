@@ -542,6 +542,7 @@ int _adns3080_probe(void *fdt, int fdt_node){
 	_adns3080_read_reg(self, ADNS3080_DELTA_Y, &dummy);
 
 	// upload the firmware
+	(void)_adns3080_fw;
 /*
 	dbg_printk("adns3080: upld %d bytes\n", sizeof(_adns3080_fw));
 	if(_adns3080_upload_firmware(self) < 0){

@@ -155,14 +155,14 @@ static void _dump_hex(console_device_t con, void *addr, hex_format_t format){
 
 static int _cmd_md(console_device_t con, void *ptr, int argc, char **argv){
 	hex_format_t format = HEX_8;
-	unsigned int addr = 0;
+	void* addr = 0;
 	if(argc == 2){
-		int r = sscanf(argv[1], "%x", &addr);
+		int r = sscanf(argv[1], "%p", &addr);
 		if(r != 1){
 			goto usage;
 		}
 	} else if(argc == 3){
-		int r = sscanf(argv[2], "%x", &addr);
+		int r = sscanf(argv[2], "%p", &addr);
 		if(r != 1){
 			goto usage;
 		}
@@ -172,7 +172,7 @@ static int _cmd_md(console_device_t con, void *ptr, int argc, char **argv){
 			format = HEX_32;
 		}
 	}
-	_dump_hex(con, (void*)addr, format);
+	_dump_hex(con, addr, format);
 	return 0;
 usage:
 	console_printf(con, "Usage: %s [format:x32|x8] <hex addr>\n");
@@ -433,16 +433,6 @@ static const struct console_device_ops _console_ops = {
 	.printf = _console_printf,
 	.read = _console_read
 };
-
-static int _console_file_read(struct _reent *r, void *ptr, char *buf, int size){
-	struct console *self = (struct console*)ptr;
-	return serial_read(self->serial, buf, (size_t)size, THREAD_SLEEP_MAX_DELAY);
-}
-
-static int _console_file_write(struct _reent *r, void *ptr, const char *buf, int size){
-	struct console *self = (struct console*)ptr;
-	return serial_write(self->serial, buf, (size_t)size, CONSOLE_WRITE_TIMEOUT);
-}
 
 int _console_probe(void *fdt, int fdt_node){
 	struct console *self = kzmalloc(sizeof(struct console));

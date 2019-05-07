@@ -44,7 +44,7 @@ int _vardir_add_static(vardir_device_t dev, uint32_t id, const char *name, vardi
 	return ret;
 }
 
-int _vardir_add_dynamic(vardir_device_t dev, uint32_t id, const char *name, uint8_t type, struct vardir_entry_ops **ops){
+int _vardir_add_dynamic(vardir_device_t dev, uint32_t id, const char *name, vardir_value_type_t type, struct vardir_entry_ops **ops){
 	struct vardir_driver *self = container_of(dev, struct vardir_driver, dev.ops);
 	thread_mutex_lock(&self->lock);
 	
@@ -81,16 +81,19 @@ int _vardir_get(vardir_device_t dev, uint32_t id, const char *name, vardir_value
 			if(size != sizeof(uint32_t)) return -1;
 			*((uint32_t*)value) = val;
 			ret = sizeof(uint32_t);
+			break;
 		case VAR_INT16:
 		case VAR_UINT16:
 			if(size != sizeof(uint16_t)) return -1;
 			*((uint16_t*)value) = (uint16_t)val;
 			ret = sizeof(uint16_t);
+			break;
 		case VAR_INT8:
 		case VAR_UINT8:
 			if(size != sizeof(uint8_t)) return -1;
 			*((uint8_t*)value) = (uint8_t)val;
 			ret = sizeof(uint8_t);
+			break;
 		case VAR_STRING: {
 			break;
 		}

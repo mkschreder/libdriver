@@ -23,7 +23,7 @@
 // endpoint indices
 #define USB_CDC_DATA_IN_ENDP 2
 #define USB_CDC_DATA_OUT_ENDP 3
-
+#if 0
 static const struct usb_device_descriptor _default_device_desc = {
     .bLength = 18,                        //    bLength
     .bDescriptorType = USB_DESC_TYPE_DEVICE,      //    bDescriptorType
@@ -44,7 +44,7 @@ static const struct usb_device_descriptor _default_device_desc = {
     .iSerialNumber = 3,                      //    iSerialNumbert
     .bNumConfigurations = 1                  //    bNumConfigurations
 };
-
+#endif
 const uint8_t USB_DEVICE_QR_DESC[] = {
     (uint8_t)10,                        //    bLength
     (uint8_t)0x06,      //    bDescriptorType
