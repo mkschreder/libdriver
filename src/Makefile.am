@@ -1,20 +1,22 @@
 lib_LIBRARIES=libdriver.a
 libdriver_a_SOURCES=\
-    accgyro/mpu6500.c\
+	accgyro/mpu6500.c\
 	analog/lp55231.c\
 	analog/mcp4461.c\
-    baro/bmp280.c\
+	baro/bmp280.c\
 	can/canopen.c\
-    disp/ili9340.c\
-    disp/ledpanel.c\
+	disp/ili9340.c\
+	disp/ledpanel.c\
+	fpga/ice40.c\
 	gpio/mcp2317.c\
 	gpio/max14890.c\
 	hbridge/drv8302.c\
 	mem/at24.c\
-    pointer/pmw3360.c\
-    pointer/adns3080.c\
+	mem/m25.c\
+	pointer/pmw3360.c\
+	pointer/adns3080.c\
 	range/vl6180.c\
-    usb/usbd_cdc.c\
+	usb/usbd_cdc.c\
 	tty/console.c\
 	vardir.c
 libdriver_a_LIBADD=
@@ -22,9 +24,9 @@ libdriver_a_CFLAGS = -I$(top_srcdir)/include
 
 other_sources =\
     accgyro/adxl345.c\
+	accgyro/mpu6000.c\
     accgyro/l3g4200d.c\
     accgyro/mma7455.c\
-    accgyro/mpu6000.c\
     accgyro/mpu6050.c\
     accgyro/mpu6050dmp6.c\
     baro/bmp085.c\

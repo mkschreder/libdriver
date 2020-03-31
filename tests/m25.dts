@@ -1,0 +1,21 @@
+/dts-v1/;
+
+/*
+dtc -I dts -O dtb -o m25.dtb m25.dts
+xxd -i m25.dtb > m25-dtb.h
+*/
+
+/ {
+	gpio: gpio {
+		compatible = "mock,gpio";
+	};
+	spi: spi {
+		compatible = "mock,spi";
+	};
+	m25: m25 {
+		compatible = "fw,m25";
+		spi = <&spi>;
+		gpio = <&gpio>;
+		cs_pin = <2>;
+	};
+};

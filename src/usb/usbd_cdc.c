@@ -63,6 +63,7 @@ struct usb_cdc {
     usbd_device_t usbd;
 };
 
+#if 0
 static int _usb_cdc_command_isr(struct usbd_device *dev, struct usb_setup_packet *packet) {
     switch (packet->wRequestAndType) {
     case USB_DEVICE_CDC_REQUEST_SET_LINE_CODING:
@@ -76,7 +77,7 @@ static int _usb_cdc_command_isr(struct usbd_device *dev, struct usb_setup_packet
     }
     return 0;
 }
-
+#endif
 static int _serial_write(serial_port_t dev, const void *data, size_t size, uint32_t timeout){
 	struct usb_cdc *self = container_of(dev, struct usb_cdc, dev.ops);
 	if(!self) return -1;

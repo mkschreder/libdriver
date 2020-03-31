@@ -12,6 +12,7 @@ AX_CODE_COVERAGE
 LT_INIT
 
 AC_PROG_CC
+AC_PROG_CXX
 
 AC_ARG_WITH(pkgconfigdir,
 	AC_HELP_STRING([--with-pkgconfigdir],
@@ -23,5 +24,4 @@ AC_MSG_NOTICE([pkgconfig directory is ${pkgconfigdir}])
 
 AC_CONFIG_FILES([libdriver.pc])
 
-AC_OUTPUT(Makefile src/Makefile include/Makefile)
-
+AC_OUTPUT(Makefile src/Makefile include/Makefile tests/Makefile)

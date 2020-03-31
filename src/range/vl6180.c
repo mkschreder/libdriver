@@ -103,12 +103,13 @@ static int _vl6180_write_reg(struct vl6180 *self, uint16_t reg, uint8_t value){
 	uint8_t tx[3] = { (uint8_t)(reg >> 8) & 0xff, (uint8_t)(reg & 0xff), value };
 	return i2c_transfer(self->i2c, self->address, tx, 3, NULL, 0, VL6180_I2C_TIMEOUT);
 }
-
+#if 0
 static int _vl6180_write_reg16(struct vl6180 *self, uint16_t reg, uint16_t value){
 	uint8_t tx[4] = { (uint8_t)(reg >> 8) & 0xff, (uint8_t)(reg & 0xff), (uint8_t)(value >> 8), (uint8_t)(value) };
 	return i2c_transfer(self->i2c, self->address, tx, 4, NULL, 0, VL6180_I2C_TIMEOUT);
 }
-
+#endif
+#if 0
 static void _vl6180_begin(struct vl6180 *self){
 	thread_sleep_ms(10);
 	gpio_set(self->gpio, self->ce_pin);
@@ -120,6 +121,7 @@ static void _vl6180_end(struct vl6180 *self){
 	gpio_reset(self->gpio, self->ce_pin);
 	thread_sleep_ms(10);
 }
+#endif 
 
 #define CHECK(x) do { if((x) < 0) { printk(PRINT_ERROR "vl6180: i2c communication error!\n"); return -EIO; } } while(0)
 static int _vl6180_configure_module(struct vl6180 *self){
@@ -182,6 +184,7 @@ static int _vl6180_configure_module(struct vl6180 *self){
 	return 0;
 }
 
+#if 0
 static const char *_vl6180_strerror(uint8_t status){
 	static const char *str[16] = {
 		"Success",
@@ -203,7 +206,7 @@ static const char *_vl6180_strerror(uint8_t status){
 	};
 	return str[(status >> 4) & 0xf];
 }
-
+#endif
 static int _vl6180_analog_read(analog_device_t dev, unsigned int channel, float *value){
 	struct vl6180 *self = container_of(dev, struct vl6180, dev.ops);
 	if(channel == 0){

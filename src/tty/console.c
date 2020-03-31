@@ -361,7 +361,7 @@ static void _console_device_task(void *ptr){
 		rd = con_readline(self, self->line, sizeof(self->line));
 
 		if(rd < 0) {
-			_console_printf(&self->dev.ops, "Internal error (%d): %s\n", rd, strerror(-rd));
+			_console_printf(&self->dev.ops, "console: error (%d): %s\n", rd, strerror(-rd));
             thread_sleep_ms(100); // to avoid busy loop
 			continue;
 		}

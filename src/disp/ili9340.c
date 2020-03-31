@@ -281,6 +281,7 @@ void ili9340_setScrollMargins(struct ili9340 *self, uint16_t top, uint16_t botto
     _wr_data16(self, bottom); 
 }
 */
+#if 0
 static void _ili9340_setAddrWindow(struct ili9340 *self, int x0, int y0, int x1, int y1){
     _wr_command(self, ILI9340_CASET); // Column addr set
     _wr_data(self, (uint8_t)(x0 >> 8));
@@ -294,6 +295,7 @@ static void _ili9340_setAddrWindow(struct ili9340 *self, int x0, int y0, int x1,
     _wr_data(self, (uint8_t)(y1 >> 8));
     _wr_data(self, (uint8_t)(y1 & 0xff));     // YEND
 }
+#endif
 /*
 void ili9340_setRotation(struct ili9340 *self, uint8_t m) {
     _wr_command(self, ILI9340_MADCTL);
@@ -322,6 +324,7 @@ void ili9340_setRotation(struct ili9340 *self, uint8_t m) {
     }
 }*/
 
+#if 0
 static void _ili9340_refresh(display_device_t dev) {
     struct ili9340 *self = container_of(dev, struct ili9340, dev.ops);
     CS_LO;
@@ -336,6 +339,7 @@ static void _ili9340_refresh(display_device_t dev) {
 
     CS_HI;
 }
+#endif
 
 int _ili9340_write_pixel(display_device_t dev, int x, int y, uint32_t color){
     struct ili9340 *self = container_of(dev, struct ili9340, dev.ops);

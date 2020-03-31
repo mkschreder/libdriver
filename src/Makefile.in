@@ -144,10 +144,11 @@ am_libdriver_a_OBJECTS = accgyro/libdriver_a-mpu6500.$(OBJEXT) \
 	can/libdriver_a-canopen.$(OBJEXT) \
 	disp/libdriver_a-ili9340.$(OBJEXT) \
 	disp/libdriver_a-ledpanel.$(OBJEXT) \
+	fpga/libdriver_a-ice40.$(OBJEXT) \
 	gpio/libdriver_a-mcp2317.$(OBJEXT) \
 	gpio/libdriver_a-max14890.$(OBJEXT) \
 	hbridge/libdriver_a-drv8302.$(OBJEXT) \
-	mem/libdriver_a-at24.$(OBJEXT) \
+	mem/libdriver_a-at24.$(OBJEXT) mem/libdriver_a-m25.$(OBJEXT) \
 	pointer/libdriver_a-pmw3360.$(OBJEXT) \
 	pointer/libdriver_a-adns3080.$(OBJEXT) \
 	range/libdriver_a-vl6180.$(OBJEXT) \
@@ -239,6 +240,10 @@ CODE_COVERAGE_LDFLAGS = @CODE_COVERAGE_LDFLAGS@
 CODE_COVERAGE_LIBS = @CODE_COVERAGE_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CXX = @CXX@
+CXXCPP = @CXXCPP@
+CXXDEPMODE = @CXXDEPMODE@
+CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
@@ -298,6 +303,7 @@ abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
@@ -348,21 +354,23 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LIBRARIES = libdriver.a
 libdriver_a_SOURCES = \
-    accgyro/mpu6500.c\
+	accgyro/mpu6500.c\
 	analog/lp55231.c\
 	analog/mcp4461.c\
-    baro/bmp280.c\
+	baro/bmp280.c\
 	can/canopen.c\
-    disp/ili9340.c\
-    disp/ledpanel.c\
+	disp/ili9340.c\
+	disp/ledpanel.c\
+	fpga/ice40.c\
 	gpio/mcp2317.c\
 	gpio/max14890.c\
 	hbridge/drv8302.c\
 	mem/at24.c\
-    pointer/pmw3360.c\
-    pointer/adns3080.c\
+	mem/m25.c\
+	pointer/pmw3360.c\
+	pointer/adns3080.c\
 	range/vl6180.c\
-    usb/usbd_cdc.c\
+	usb/usbd_cdc.c\
 	tty/console.c\
 	vardir.c
 
@@ -370,9 +378,9 @@ libdriver_a_LIBADD =
 libdriver_a_CFLAGS = -I$(top_srcdir)/include
 other_sources = \
     accgyro/adxl345.c\
+	accgyro/mpu6000.c\
     accgyro/l3g4200d.c\
     accgyro/mma7455.c\
-    accgyro/mpu6000.c\
     accgyro/mpu6050.c\
     accgyro/mpu6050dmp6.c\
     baro/bmp085.c\
@@ -511,6 +519,14 @@ disp/libdriver_a-ili9340.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
 disp/libdriver_a-ledpanel.$(OBJEXT): disp/$(am__dirstamp) \
 	disp/$(DEPDIR)/$(am__dirstamp)
+fpga/$(am__dirstamp):
+	@$(MKDIR_P) fpga
+	@: > fpga/$(am__dirstamp)
+fpga/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) fpga/$(DEPDIR)
+	@: > fpga/$(DEPDIR)/$(am__dirstamp)
+fpga/libdriver_a-ice40.$(OBJEXT): fpga/$(am__dirstamp) \
+	fpga/$(DEPDIR)/$(am__dirstamp)
 gpio/$(am__dirstamp):
 	@$(MKDIR_P) gpio
 	@: > gpio/$(am__dirstamp)
@@ -536,6 +552,8 @@ mem/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) mem/$(DEPDIR)
 	@: > mem/$(DEPDIR)/$(am__dirstamp)
 mem/libdriver_a-at24.$(OBJEXT): mem/$(am__dirstamp) \
+	mem/$(DEPDIR)/$(am__dirstamp)
+mem/libdriver_a-m25.$(OBJEXT): mem/$(am__dirstamp) \
 	mem/$(DEPDIR)/$(am__dirstamp)
 pointer/$(am__dirstamp):
 	@$(MKDIR_P) pointer
@@ -584,6 +602,7 @@ mostlyclean-compile:
 	-rm -f baro/*.$(OBJEXT)
 	-rm -f can/*.$(OBJEXT)
 	-rm -f disp/*.$(OBJEXT)
+	-rm -f fpga/*.$(OBJEXT)
 	-rm -f gpio/*.$(OBJEXT)
 	-rm -f hbridge/*.$(OBJEXT)
 	-rm -f mem/*.$(OBJEXT)
@@ -603,10 +622,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@can/$(DEPDIR)/libdriver_a-canopen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/libdriver_a-ili9340.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@disp/$(DEPDIR)/libdriver_a-ledpanel.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@fpga/$(DEPDIR)/libdriver_a-ice40.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/libdriver_a-max14890.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@gpio/$(DEPDIR)/libdriver_a-mcp2317.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@hbridge/$(DEPDIR)/libdriver_a-drv8302.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/libdriver_a-at24.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@mem/$(DEPDIR)/libdriver_a-m25.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-adns3080.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pointer/$(DEPDIR)/libdriver_a-pmw3360.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@range/$(DEPDIR)/libdriver_a-vl6180.Po@am__quote@
@@ -735,6 +756,20 @@ disp/libdriver_a-ledpanel.obj: disp/ledpanel.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o disp/libdriver_a-ledpanel.obj `if test -f 'disp/ledpanel.c'; then $(CYGPATH_W) 'disp/ledpanel.c'; else $(CYGPATH_W) '$(srcdir)/disp/ledpanel.c'; fi`
 
+fpga/libdriver_a-ice40.o: fpga/ice40.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT fpga/libdriver_a-ice40.o -MD -MP -MF fpga/$(DEPDIR)/libdriver_a-ice40.Tpo -c -o fpga/libdriver_a-ice40.o `test -f 'fpga/ice40.c' || echo '$(srcdir)/'`fpga/ice40.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) fpga/$(DEPDIR)/libdriver_a-ice40.Tpo fpga/$(DEPDIR)/libdriver_a-ice40.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fpga/ice40.c' object='fpga/libdriver_a-ice40.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o fpga/libdriver_a-ice40.o `test -f 'fpga/ice40.c' || echo '$(srcdir)/'`fpga/ice40.c
+
+fpga/libdriver_a-ice40.obj: fpga/ice40.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT fpga/libdriver_a-ice40.obj -MD -MP -MF fpga/$(DEPDIR)/libdriver_a-ice40.Tpo -c -o fpga/libdriver_a-ice40.obj `if test -f 'fpga/ice40.c'; then $(CYGPATH_W) 'fpga/ice40.c'; else $(CYGPATH_W) '$(srcdir)/fpga/ice40.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) fpga/$(DEPDIR)/libdriver_a-ice40.Tpo fpga/$(DEPDIR)/libdriver_a-ice40.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='fpga/ice40.c' object='fpga/libdriver_a-ice40.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o fpga/libdriver_a-ice40.obj `if test -f 'fpga/ice40.c'; then $(CYGPATH_W) 'fpga/ice40.c'; else $(CYGPATH_W) '$(srcdir)/fpga/ice40.c'; fi`
+
 gpio/libdriver_a-mcp2317.o: gpio/mcp2317.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT gpio/libdriver_a-mcp2317.o -MD -MP -MF gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo -c -o gpio/libdriver_a-mcp2317.o `test -f 'gpio/mcp2317.c' || echo '$(srcdir)/'`gpio/mcp2317.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) gpio/$(DEPDIR)/libdriver_a-mcp2317.Tpo gpio/$(DEPDIR)/libdriver_a-mcp2317.Po
@@ -790,6 +825,20 @@ mem/libdriver_a-at24.obj: mem/at24.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mem/at24.c' object='mem/libdriver_a-at24.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o mem/libdriver_a-at24.obj `if test -f 'mem/at24.c'; then $(CYGPATH_W) 'mem/at24.c'; else $(CYGPATH_W) '$(srcdir)/mem/at24.c'; fi`
+
+mem/libdriver_a-m25.o: mem/m25.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT mem/libdriver_a-m25.o -MD -MP -MF mem/$(DEPDIR)/libdriver_a-m25.Tpo -c -o mem/libdriver_a-m25.o `test -f 'mem/m25.c' || echo '$(srcdir)/'`mem/m25.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mem/$(DEPDIR)/libdriver_a-m25.Tpo mem/$(DEPDIR)/libdriver_a-m25.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mem/m25.c' object='mem/libdriver_a-m25.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o mem/libdriver_a-m25.o `test -f 'mem/m25.c' || echo '$(srcdir)/'`mem/m25.c
+
+mem/libdriver_a-m25.obj: mem/m25.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT mem/libdriver_a-m25.obj -MD -MP -MF mem/$(DEPDIR)/libdriver_a-m25.Tpo -c -o mem/libdriver_a-m25.obj `if test -f 'mem/m25.c'; then $(CYGPATH_W) 'mem/m25.c'; else $(CYGPATH_W) '$(srcdir)/mem/m25.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) mem/$(DEPDIR)/libdriver_a-m25.Tpo mem/$(DEPDIR)/libdriver_a-m25.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='mem/m25.c' object='mem/libdriver_a-m25.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -c -o mem/libdriver_a-m25.obj `if test -f 'mem/m25.c'; then $(CYGPATH_W) 'mem/m25.c'; else $(CYGPATH_W) '$(srcdir)/mem/m25.c'; fi`
 
 pointer/libdriver_a-pmw3360.o: pointer/pmw3360.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdriver_a_CFLAGS) $(CFLAGS) -MT pointer/libdriver_a-pmw3360.o -MD -MP -MF pointer/$(DEPDIR)/libdriver_a-pmw3360.Tpo -c -o pointer/libdriver_a-pmw3360.o `test -f 'pointer/pmw3360.c' || echo '$(srcdir)/'`pointer/pmw3360.c
@@ -1006,6 +1055,8 @@ distclean-generic:
 	-rm -f can/$(am__dirstamp)
 	-rm -f disp/$(DEPDIR)/$(am__dirstamp)
 	-rm -f disp/$(am__dirstamp)
+	-rm -f fpga/$(DEPDIR)/$(am__dirstamp)
+	-rm -f fpga/$(am__dirstamp)
 	-rm -f gpio/$(DEPDIR)/$(am__dirstamp)
 	-rm -f gpio/$(am__dirstamp)
 	-rm -f hbridge/$(DEPDIR)/$(am__dirstamp)
@@ -1030,7 +1081,7 @@ clean-am: clean-generic clean-libLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) fpga/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -1076,7 +1127,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
+	-rm -rf ./$(DEPDIR) accgyro/$(DEPDIR) analog/$(DEPDIR) baro/$(DEPDIR) can/$(DEPDIR) disp/$(DEPDIR) fpga/$(DEPDIR) gpio/$(DEPDIR) hbridge/$(DEPDIR) mem/$(DEPDIR) pointer/$(DEPDIR) range/$(DEPDIR) tty/$(DEPDIR) usb/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

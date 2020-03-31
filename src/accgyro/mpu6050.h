@@ -38,7 +38,8 @@
 
 struct mpu6050{
 	i2c_dev_t i2c;
-	uint8_t addr; 
+	uint8_t addr;
+	uint8_t buffer[14];
 }; 
 
 //definitions
