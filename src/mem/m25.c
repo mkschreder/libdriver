@@ -173,11 +173,18 @@ void m25_sector_erase(struct m25 *self, uint8_t s) {
 }
 #endif
 
+static int _m25_spi_transfer(struct m25 *self, const uint8_t *tx, uint8_t *rx, size_t size){
+	if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, size, M25_SPI_TIMEOUT) < 0){
+		return -EIO;
+	}
+	return (int)size;
+}
+
 static uint32_t _m25_read_id(struct m25 *self){
 	uint8_t tx[4] = {M25_CMD_RDID, 0, 0, 0};
 	uint8_t rx[4] = {0, 0, 0, 0};
 
-	if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 4, M25_SPI_TIMEOUT) < 0){
+	if(_m25_spi_transfer(self, tx, rx, 4) < 0){
 		return 0;
 	}
 
@@ -188,7 +195,7 @@ static uint8_t _m25_read_status(struct m25 *self) {
 	uint8_t tx[2] = {M25_CMD_RDSR, 0};
 	uint8_t rx[2] = {0, 0};
 
-	if(spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 2, M25_SPI_TIMEOUT) < 0){
+	if(_m25_spi_transfer(self, tx, rx, 2) < 0){
 		return 0;
 	}
 
@@ -199,7 +206,7 @@ static void _m25_wr_en(struct m25 *self, bool write) {
 	uint8_t tx[1] = {(write)?M25_CMD_WREN:M25_CMD_WRDI};
 	uint8_t rx[1] = {0};
 
-	spi_transfer(self->spi, self->gpio, self->cs_pin, tx, rx, 1, M25_SPI_TIMEOUT);
+	_m25_spi_transfer(self, tx, rx, 1);
 }
 
 static int _m25_wait_done(struct m25 *self) {
@@ -236,7 +243,7 @@ static int _m25_read(struct m25 *self, size_t ad, uint8_t *data, size_t len){
 			(rdad >> 8) & 0xff,
 			(rdad >> 0) & 0xff};
 		memset(buf + 4, 0xFF, rdsz);
-		if(spi_transfer(self->spi, self->gpio, self->cs_pin, buf, buf, rdsz + 4, M25_SPI_TIMEOUT) < 0){
+		if(_m25_spi_transfer(self, buf, buf, rdsz + 4) < 0){
 			printk("m25: could not verify write at %08x\n", off);
 			return -1;
 		}
@@ -260,7 +267,7 @@ static int _m25_write(struct m25 *self, size_t ad, const uint8_t *data, size_t l
 
 		_m25_wr_en(self, true);
 
-		if(spi_transfer(self->spi, self->gpio, self->cs_pin, buf, buf, wrsz + 4, M25_SPI_TIMEOUT) < 0){
+		if(_m25_spi_transfer(self, buf, buf, wrsz + 4) < 0){
 			printk("m25: could not write at %08x\n", off);
 			return -1;
 		}
@@ -285,7 +292,7 @@ static int _m25_sector_erase(struct m25 *self, size_t addr){
 
 	_m25_wr_en(self, true);
 
-	if(spi_transfer(self->spi, self->gpio, self->cs_pin, buf, buf, sizeof(buf), M25_SPI_TIMEOUT) < 0){
+	if(_m25_spi_transfer(self, buf, buf, sizeof(buf)) < 0){
 		printk("m25: could not erase sector at %08x\n", addr);
 		return -1;
 	}
@@ -375,6 +382,8 @@ int _m25_probe(void *fdt, int fdt_node){
 	self->gpio = gpio;
 	self->cs_pin = (uint32_t)cs_pin;
 
+	gpio_set(self->gpio, self->cs_pin);
+
 	uint32_t id = _m25_read_id(self);
 	self->info.manufacturer = (uint8_t)((id >> 24) & 0xff);
 	self->info.type = (uint8_t)((id >> 16) & 0xff);
@@ -386,6 +395,15 @@ int _m25_probe(void *fdt, int fdt_node){
 				 self->info.manufacturer,
 				 self->info.type,
 				 self->info.size);
+
+	switch(self->info.manufacturer){
+		case 0xef:
+			printk("m25: found Winband flash!\n");
+			break;
+		default:
+			printk("m25: unknown device!\n");
+			return -1;
+	}
 
 	memory_device_init(&self->dev, fdt, fdt_node, &_m25_memory_ops);
 	memory_device_register(&self->dev);

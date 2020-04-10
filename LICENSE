@@ -1,0 +1,12 @@
+ _     ___ ____  ____  ____  _____     _______ ____  
+| |   |_ _| __ )|  _ \|  _ \|_ _\ \   / / ____|  _ \ 
+| |    | ||  _ \| | | | |_) || | \ \ / /|  _| | |_) |
+| |___ | || |_) | |_| |  _ < | |  \ V / | |___|  _ < 
+|_____|___|____/|____/|_| \_\___|  \_/  |_____|_| \_\
+
+This library is distributed under GPLv2
+
+You can integrate commercial code with Rocket project without having to distribute your application under GPLv2 as long as your application only uses abstract interfaces to interact with device drivers. 
+
+For commercial license email info@swedishembedded.com.
+                                                     

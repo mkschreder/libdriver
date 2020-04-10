@@ -127,4 +127,4 @@ static int _usb_cdc_remove(void *fdt, int fdt_node){
     return 0;
 }
 
-DEVICE_DRIVER(usbd_serial,"ms,usbd_serial", _usb_cdc_probe,_usb_cdc_remove)
+DEVICE_DRIVER(usbd_serial,"fw,usbd_cdc", _usb_cdc_probe,_usb_cdc_remove)
