@@ -27,10 +27,10 @@
 #include <libfirmware/spi.h>
 #include <libfirmware/gpio.h>
 #include <libfirmware/console.h>
-#include <libfirmware/mutex.h>
 #include <libfirmware/i2c.h>
 #include <libfirmware/analog.h>
 #include <libfirmware/math.h>
+#include <libfirmware/thread/mutex.h>
 
 #include <libfdt/libfdt.h>
 
@@ -83,7 +83,7 @@ static int _mcp4461_analog_write(analog_device_t dev, unsigned int chan, float v
 	if(chan > 7) return -EINVAL;
 
 	value = constrain_float(value, 0, 1.0f);
-	uint16_t val = (uint16_t)((float)((uint16_t)0x3ff)*value) & 0x3ff;
+	uint16_t val = (uint16_t)((float)((uint16_t)0xff)*value) & 0xff;
 
 	static const uint8_t regs[8] = {
 		MCP4XXX_REG_WIPER0,

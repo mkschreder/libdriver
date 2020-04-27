@@ -27,7 +27,7 @@
 #include <libfirmware/vardir.h>
 #include <libfirmware/console.h>
 #include <libfirmware/serial.h>
-#include <libfirmware/types.h>
+#include <libfirmware/types/types.h>
 #include <libfirmware/chip.h>
 #include <libfirmware/driver.h>
 

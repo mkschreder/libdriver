@@ -9,7 +9,7 @@
 #include <libfirmware/gpio.h>
 #include <libfirmware/console.h>
 #include <libfirmware/memory.h>
-#include <libfirmware/mutex.h>
+#include <libfirmware/thread/mutex.h>
 
 #include <libfdt/libfdt.h>
 

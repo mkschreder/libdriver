@@ -4,7 +4,6 @@
 #include <libfirmware/pointer.h>
 #include <libfirmware/spi.h>
 #include <libfirmware/gpio.h>
-#include <libfirmware/thread.h>
 
 #include <libfdt/libfdt.h>
 

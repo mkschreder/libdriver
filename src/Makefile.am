@@ -55,4 +55,6 @@ other_sources =\
     temperature/ds18b20.c\
     tty/vt100.c\
     waterflow/fs300a.c 
+
+libdriver_a_CFLAGS+=-I$(top_srcdir)/include/libdriver
 AUTOMAKE_OPTIONS = subdir-objects

@@ -29,7 +29,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <libfirmware/thread.h>
+#include <libfirmware/thread/thread.h>
 #include <libfirmware/atomic.h>
 #include <libfirmware/math.h>
 #include <libfirmware/driver.h>

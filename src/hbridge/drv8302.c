@@ -27,7 +27,7 @@
 #include <libfirmware/spi.h>
 #include <libfirmware/gpio.h>
 #include <libfirmware/console.h>
-#include <libfirmware/mutex.h>
+#include <libfirmware/thread/mutex.h>
 #include <libfirmware/analog.h>
 #include <libfirmware/math.h>
 #include <libfirmware/adc.h>

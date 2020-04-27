@@ -40,7 +40,7 @@
 #include <libfirmware/console.h>
 #include <libfirmware/memory.h>
 #include <libfirmware/mtd.h>
-#include <libfirmware/mutex.h>
+#include <libfirmware/thread/mutex.h>
 
 #include <libfdt/libfdt.h>
 

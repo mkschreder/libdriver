@@ -7,7 +7,7 @@
 #include <libfirmware/driver.h>
 #include <libfirmware/memory.h>
 #include <libfirmware/gpio.h>
-#include <libfirmware/mutex.h>
+#include <libfirmware/thread/mutex.h>
 #include <libfirmware/i2c.h>
 
 #include <libfdt/libfdt.h>

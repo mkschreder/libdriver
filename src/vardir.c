@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <errno.h>
 
-#include <libfirmware/thread.h>
 #include <libfirmware/vardir.h>
 #include <libfirmware/driver.h>
 
